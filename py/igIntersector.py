@@ -23,13 +23,13 @@ class Intersector:
 		cellBToCellAList = {}
 		cellLocator = vtk.vtkCellLocator()
 		cellLocator.SetDataSet(grida)
-		ptIds = vtk.vtkIdType()
+		ptIds = vtk.vtkIdList()
 		p0 = numpy.zeros((3,), numpy.float64)
 		p1 = numpy.zeros((3,), numpy.float64)
 		cellAList = vtk.vtkIdList()
 		# iterate over the gridb cells
-		for iCellb in range(ugridb.GetNumberOfCells()):
-			cellb = ugrid2.GetCell(iCell)
+		for iCellB in range(gridb.GetNumberOfCells()):
+			cellb = gridb.GetCell(iCellB)
 			# iterate over the edges of this cell
 			for iEdgeb in range(cellb.GetNumberOfEdges()):
 				edge = cellb.GetEdge(iEdgeb)
@@ -79,7 +79,7 @@ def test1():
 	pt2Ids.SetId(2, 2)
 	grid2.InsertNextCell(vtk.VTK_TRIANGLE, pt2Ids)
 
-
+	insectr = Intersector(grid1, grid2)
 
 if __name__ == '__main__': 
 	test1()
