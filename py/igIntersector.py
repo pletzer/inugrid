@@ -49,14 +49,26 @@ class Intersector:
 
 def createTriangulation(pts):
 	vPts = vtk.vtkPoints()
-	for i in len(pts):
+	numPoints = len(pts)
+	vPts.SetNumberOfPoints(numPoints)
+	for i in range(numPoints):
 		vPts.SetPoint(i, pts[i])
 	poly = vtk.vtkPolyData()
 	poly.SetPoints(vPts)
 	delny = vtk.vtkDelaunay2D()
 	delny.SetInputData(poly)
 	delny.Update()
+	# convert the output of delny to a vtkUnstructuredGrid
+	appendFilter = vtk.vtkAppendFilter()
+	appendFilter.AddInputData(delny.GetOutput())
+	appendFilter.Update()
+	grid = vtk.vtkUnstructuredGrid()
+	grid.ShallowCopy(appendFilter.GetOutput())
+	print grid
+	return grid
 
+def test0():
+	grid = createTriangulation([(0., 0., 0.), (1., 0., 0.), (0., 1., 0.)])
 
 def test1():
 	# create grid 1, one triangle
@@ -96,6 +108,7 @@ def test1():
 	print(insectr.getCells2())
 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
+	test0()
 	test1()
 
