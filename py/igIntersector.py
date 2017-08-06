@@ -47,6 +47,7 @@ class Intersector:
 
 #####################################################################################
 
+
 def test1():
 	# create grid 1, one triangle
 	pts1 = vtk.vtkPoints()
@@ -56,8 +57,8 @@ def test1():
 	pts1.SetPoint(2, [0., 1., 0.])
 	grid1 = vtk.vtkUnstructuredGrid()
 	grid1.Allocate()
-	pt1Ids = vtk.vtkIdType()
-	pt1Ids.SeetNumberOfIds(3)
+	pt1Ids = vtk.vtkIdList()
+	pt1Ids.SetNumberOfIds(3)
 	pt1Ids.SetId(0, 0)
 	pt1Ids.SetId(1, 1)
 	pt1Ids.SetId(2, 2)
@@ -71,8 +72,8 @@ def test1():
 	pts2.SetPoint(2, [1., 1., 0.])
 	grid2 = vtk.vtkUnstructuredGrid()
 	grid2.Allocate()
-	pt2Ids = vtk.vtkIdType()
-	pt2Ids.SeetNumberOfIds(3)
+	pt2Ids = vtk.vtkIdList()
+	pt2Ids.SetNumberOfIds(3)
 	pt2Ids.SetId(0, 0)
 	pt2Ids.SetId(1, 1)
 	pt2Ids.SetId(2, 2)
