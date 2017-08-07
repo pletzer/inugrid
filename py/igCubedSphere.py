@@ -9,6 +9,7 @@ class CubedSphere:
 		appendGrids = vtk.vtkAppendFilter()
 		#appendGrids.MergePointsOn()
 		appendGrids.SetOutputPointsPrecision(1) # double
+		#appendGrids.SetDebug(1)
 
 		# create tile grids
 		numPointsPerTile = numCellsPerTile + 1
@@ -22,7 +23,7 @@ class CubedSphere:
 		self.tilesXyz = []
 		self.tilesPts = []
 		self.tilesGrid = []
-		
+		tile = 0
 		# iterate over the space dimensions
 		for dim0 in range(3):
 
@@ -42,7 +43,6 @@ class CubedSphere:
 				xyz[:, dim2] = vv.flat
 				#print xyz
 
-				"""
 				# project the vertices onto sphere
 				for i in range(3):
 					xyz[:, i] -= centre[i]
@@ -52,7 +52,6 @@ class CubedSphere:
 					xyz[:, i] /= dist
 					# extend to the sphere's surface
 					xyz[:, i] *= radius
-				"""
 
 				ntot = numPointsPerTile**2
 
@@ -69,7 +68,7 @@ class CubedSphere:
 				tileGrid = vtk.vtkStructuredGrid()
 				tileGrid.SetDimensions(numPointsPerTile, numPointsPerTile, 1)
 				tileGrid.SetPoints(tilePts)
-				#print tileGrid
+				print('--- grid bounds: {}'.format(tileGrid.GetBounds()))
 
 				self.tilesXyz.append(tileXyz)
 				self.tilesPts.append(tilePts)
@@ -78,8 +77,12 @@ class CubedSphere:
 				appendGrids.AddInputData(tileGrid)
 
 		appendGrids.Update()
+		print appendGrids
 		self.grid = appendGrids.GetOutput()
-		print self.grid
+		print('*** aggregate grid bounds: {}'.format(self.grid.GetBounds()))
+		for grid in self.tilesGrid:
+			print('+++ grid bounds: {}'.format(grid.GetBounds()))
+
 
 
 	def getUnstructuredGrid(self):
