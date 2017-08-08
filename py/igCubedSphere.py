@@ -98,6 +98,15 @@ class CubedSphere:
 
         gridActor = vtk.vtkActor()
         gridActor.SetMapper(gridMapper)
+        gridActor.GetProperty().SetColor(93./255., 173./255., 226./255.)
+
+        light = vtk.vtkLight()
+        light.SetFocalPoint(0., 0., 0)
+        light.SetPosition(1., 1., 0.)
+        #light.SetSpecularColor(0.8, 0.2, 0.0)
+        #light.SetDiffuseColor(0., 0.2, 0.8)
+        light.SetConeAngle(0.2)
+        light.SetIntensity(1.0)
 
         ren = vtk.vtkRenderer()
         renWin = vtk.vtkRenderWindow()
@@ -106,8 +115,9 @@ class CubedSphere:
         iren.SetRenderWindow(renWin)
         # add the actors to the renderer, set the background and size
         ren.AddActor(gridActor)
-        ren.SetBackground(0.5, 0.5, 0.5)
-        renWin.SetSize(400, 300)
+        ren.AddLight(light)
+        ren.SetBackground(1, 1, 1)
+        renWin.SetSize(640, 640)
         iren.Initialize()
         renWin.Render()
         iren.Start()
@@ -115,7 +125,7 @@ class CubedSphere:
 
 #############################################################################
 def test():
-    numCells = 2
+    numCells = 10
     cs = CubedSphere(numCells)
     grid = cs.getUnstructuredGrid()
     cs.save('cs.vtk')
