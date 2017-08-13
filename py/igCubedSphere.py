@@ -93,12 +93,32 @@ class CubedSphere:
 
 
     def show(self):
+
+        actors = []
+
         gridMapper = vtk.vtkDataSetMapper()
         gridMapper.SetInputData(self.grid)
+
+        data = self.grid.GetCellData().GetScalars()
+        if data:
+            lut = vtk.vtkLookupTable()
+            lut.SetHueRange(0.666, 0.)
+            dmin, dmax = data.GetRange()
+            lut.SetTableRange(dmin, dmax)
+            lut.Build()
+            
+            cbar = vtk.vtkScalarBarActor()
+            cbar.SetLookupTable(lut)
+            actors.append(cbar)
+
+            gridMapper.SetLookupTable(lut)
+            gridMapper.SetUseLookupTableScalarRange(1)
+
 
         gridActor = vtk.vtkActor()
         gridActor.SetMapper(gridMapper)
         gridActor.GetProperty().SetColor(93./255., 173./255., 226./255.)
+        actors.append(gridActor)
 
         light = vtk.vtkLight()
         light.SetFocalPoint(0., 0., 0)
@@ -114,8 +134,9 @@ class CubedSphere:
         iren = vtk.vtkRenderWindowInteractor()
         iren.SetRenderWindow(renWin)
         # add the actors to the renderer, set the background and size
-        ren.AddActor(gridActor)
-        ren.AddLight(light)
+        for a in actors:
+            ren.AddActor(a)
+        #ren.AddLight(light)
         ren.SetBackground(1, 1, 1)
         renWin.SetSize(640, 640)
         iren.Initialize()
