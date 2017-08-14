@@ -10,7 +10,7 @@ def getMinDLambda(lam0, lam1):
     dlam = lam1 - lam0
     a = [abs(dlam + i*2*math.pi) for i in (-1, 0, 1)]
     index = numpy.argmin(a)
-    return dlam + (index[0] - 1)*2*math.pi
+    return dlam + (index - 1)*2*math.pi
 
 def getLambdaTheta(x, y, z):
     # get lon/lat in radiants
@@ -64,6 +64,10 @@ for cellId in range(numCells):
     # compute the exterior derivative (div)
     divVal = 0.0
     for i0 in range(numPoints):
+
+        # + for 0, 1, - for 2, 3
+        sign = 1 - 2*(i0 // 2)
+
         i1 = (i0 + 1) % numPoints
         ptId0, ptId1 = ptIds.GetId(i0), ptIds.GetId(i1)
         x0, y0, z0 = points.GetPoint(ptId0)
@@ -73,9 +77,11 @@ for cellId in range(numCells):
         y1 = y0 + (y1 - y0)*(1. - EPS)
         z1 = z0 + (z1 - z0)*(1. - EPS)
         # compute the stream function for the start/end points
-        psi0 = psi(x0, y0, z0)
-        psi1 = psi(x1, y1, z1)
-        divVal += psi1 - psi0
+        #psi0 = psi(x0, y0, z0)
+        #psi1 = psi(x1, y1, z1)
+        #divVal += psi1 - psi0
+        divVal += sign * getThetaRIntegral(x0, y0, z0, x1, y1, z1)
+
     divData[cellId] = divVal
 
 # attach cell centred values to the grid
