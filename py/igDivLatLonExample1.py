@@ -1,4 +1,4 @@
-import igCubedSphere
+import igLatLon
 import vtk
 import math
 import numpy
@@ -20,32 +20,19 @@ def getMinDLambda(lam0, lam1):
     index = numpy.argmin(a)
     return dlam + (index - 1)*2*math.pi
 
-
-def integralDPhiDLambdaOverCosTheta(lama, lamb, thea, theb):
-    dthe = theb - thea
-    dlam = getMinDLambda(lama, lamb)
-    if abs(dlam) > EPS:
-        return dthe*(math.cos(lamb) - math.cos(lama))/dlam
+def getCosThetaDLambda(lam0, the0, lam1, the1):
+    dLam = getMinDLambda(lam0, lam1)
+    dThe = the1 - the0
+    if abs(dThe < EPS):
+        # same theta
+        return dLam * math.cos(0.5*(the0 + the1))
     else:
-        # lama == lamb:
-        return -dthe*math.sin(lama)
+        # normal case
+        return dLam * (math.sin(the1) - math.sin(the0)) / dThe
 
 
-def integralDPhiDThetaCosTheta(lama, lamb, thea, theb):
-    dthe = theb - thea
-    dlam = getMinDLambda(lama, lamb)
-    la, lb = lama, lamb
-    ta, tb = thea, theb
-    return 0.5*dlam* (-2*dthe*math.cos(la)*math.cos(2*ta) + 2*dthe*math.cos(lb)*math.cos(2*tb) - \
-                      2*dlam*math.cos(ta)*math.sin(la)*math.sin(ta) + dlam*math.sin(lb)*math.sin(2*tb))/ \
-                        (dlam**2 - 4*dthe**2)
-
-def phi(lam, the):
-    return math.cos(lam) * math.sin(the)
-
-
-n = 21
-cs = igCubedSphere.CubedSphere(n)
+nlats, nlons = 11, 21
+cs = igLatLon.LatLon(nlats, nlons)
 grid = cs.getUnstructuredGrid()
 
 numCells = grid.GetNumberOfCells()
@@ -68,17 +55,15 @@ for cellId in range(numCells):
         x0, y0, z0 = points.GetPoint(ptId0)
         x1, y1, z1 = points.GetPoint(ptId1)
 
+        lam0, the0 = getLambdaTheta(x0, y0, z0)
+        lam1, the1 = getLambdaTheta(x1, y1, z1)
+
+        divVal += getCosThetaDLambda(lam0, the0, lam1, the1)
+
         # retreat by a tiny bit in order to capture multivalued jumps 
         #x1 = x0 + (x1 - x0)*(1. - EPS)
         #y1 = y0 + (y1 - y0)*(1. - EPS)
         #z1 = z0 + (z1 - z0)*(1. - EPS)
-
-        lama, thea = getLambdaTheta(x0, y0, z0)
-        lamb, theb = getLambdaTheta(x1, y1, z1)
-
-        divVal += integralDPhiDLambdaOverCosTheta(lama, lamb, thea, theb)
-        divVal += integralDPhiDThetaCosTheta(lama, lamb, thea, theb)
-        #divVal += 0.25*getMinDLambda(lama, lamb)
 
     divData[cellId] = divVal
 
@@ -92,5 +77,5 @@ dataArray.SetVoidArray(divData, numCells, save)
 grid.GetCellData().SetScalars(dataArray)
 
 # save/show
-cs.save('div2.vtk')
+cs.save('divLatLon1.vtk')
 cs.show()
