@@ -69,16 +69,17 @@ for cellId in range(numCells):
         x0, y0, z0 = points.GetPoint(ptId0)
         x1, y1, z1 = points.GetPoint(ptId1)
 
+        # retreat by a tiny bit in order to capture multivalued jumps 
+        #x1 = x0 + (x1 - x0)*(1. - EPS)
+        #y1 = y0 + (y1 - y0)*(1. - EPS)
+        #z1 = z0 + (z1 - z0)*(1. - EPS)
+
         lam0, the0 = getLambdaTheta(x0, y0, z0)
         lam1, the1 = getLambdaTheta(x1, y1, z1)
 
         divVal += getCosThetaDLambda(lam0, the0, lam1, the1)
         divVal -= 0.5 * alpha * getSinTwoThetaDLambda(lam0, the0, lam1, the1)
 
-        # retreat by a tiny bit in order to capture multivalued jumps 
-        #x1 = x0 + (x1 - x0)*(1. - EPS)
-        #y1 = y0 + (y1 - y0)*(1. - EPS)
-        #z1 = z0 + (z1 - z0)*(1. - EPS)
 
     divData[cellId] = divVal
 

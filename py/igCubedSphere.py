@@ -46,6 +46,11 @@ class CubedSphere:
                 xyz[:, dim0] = (pm + 1.0)/2.
                 xyz[:, dim1] = uu.flat
                 xyz[:, dim2] = vv.flat
+                # fix the vertex ordering so the area points outwards
+                if pm > 0:
+                    xyz[:, dim1] *= -1.0
+                    xyz[:, dim1] += 1.0
+
                 # project the vertices onto sphere
                 for i in range(3):
                     xyz[:, i] -= centre[i]
@@ -59,6 +64,7 @@ class CubedSphere:
                 # compute the cell areas
                 areas = self.getCellAreas(xyz)
                 tileAreas = vtk.vtkDoubleArray()
+                tileAreas.SetName('cell_areas')
                 tileAreas.SetNumberOfComponents(1)
                 tileAreas.SetNumberOfTuples(numCellsPerTile * numCellsPerTile)
                 tileAreas.SetVoidArray(areas, numCellsPerTile * numCellsPerTile, 1)

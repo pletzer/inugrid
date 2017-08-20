@@ -52,6 +52,9 @@ grid = cs.getUnstructuredGrid()
 numCells = grid.GetNumberOfCells()
 divData = numpy.zeros((numCells,), numpy.float64)
 
+grid.GetCellData().SetActiveScalars('cell_areas')
+cellAreas = grid.GetCellData().GetScalars()
+
 # iterate over the cells
 points = grid.GetPoints()
 for cellId in range(numCells):
@@ -74,7 +77,6 @@ for cellId in range(numCells):
         #y1 = y0 + (y1 - y0)*(1. - EPS)
         #z1 = z0 + (z1 - z0)*(1. - EPS)
 
-
         lam0, the0 = getLambdaTheta(x0, y0, z0)
         lam1, the1 = getLambdaTheta(x1, y1, z1)
 
@@ -82,10 +84,12 @@ for cellId in range(numCells):
         divVal += getCosThetaDLambda(lam0, the0, lam1, the1)
         divVal -= 0.5 * alpha * getSinTwoThetaDLambda(lam0, the0, lam1, the1)
 
-    divData[cellId] = divVal
+    cellArea = cellAreas.GetComponent(cellId, 0)
+    divData[cellId] = divVal / cellArea
 
 # attach cell centred values to the grid
 dataArray = vtk.vtkDoubleArray()
+dataArray.SetName('integral_star_d_phi')
 dataArray.SetNumberOfComponents(1)
 dataArray.SetNumberOfTuples(numCells)
 save = 1
