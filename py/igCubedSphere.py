@@ -19,9 +19,11 @@ class CubedSphere:
         centre = numpy.array([0.5, 0.5, 0.5])
 
         self.xyzList = []
+        self.areaList = []
         self.tileXyzList = []
         self.tilePtsList = []
         self.tileGridList = []
+        self.tileAreaList = []
 
         # iterate over the space dimensions
         for dim0 in range(3):
@@ -81,9 +83,11 @@ class CubedSphere:
                 self.appendGrids.AddInputData(tileGrid)
 
                 self.xyzList.append(xyz)
+                self.areaList.append(areas)
                 self.tileXyzList.append(tileXyz)
                 self.tilePtsList.append(tilePts)
                 self.tileGridList.append(tileGrid)
+                self.tileAreaList.append(tileAreas)
 
         self.appendGrids.Update()
         self.grid = self.appendGrids.GetOutput()
