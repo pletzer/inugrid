@@ -1,49 +1,47 @@
 import igCubedSphere
 import vtk
-import math
+from math import sqrt, cos, sin, pi, atan2
 import numpy
+
+"""
+Compute cosed line integral of d * d phi with 
+phi = (1 - alpha lambda) * cos(theta)
+"""
+
 
 EPS = 1.e-14
 
 alpha = 0.0
 
+
 def getLambdaTheta(x, y, z):
     # get lon/lat in radiants
-    lam = math.atan2(y, x)
-    rho = math.sqrt(x*x + y*y)
-    the = math.atan2(z, rho)
+    lam = atan2(y, x)
+    rho = sqrt(x*x + y*y)
+    the = atan2(z, rho)
     return lam, the
 
 
 def getMinDLambda(lam0, lam1):
     # handle day line issue
     dlam = lam1 - lam0
-    a = [abs(dlam + i*2*math.pi) for i in (-1, 0, 1)]
+    a = [abs(dlam + i*2*pi) for i in (-1, 0, 1)]
     index = numpy.argmin(a)
-    return dlam + (index - 1)*2*math.pi
+    return dlam + (index - 1)*2*pi
 
-def getCosThetaDLambda(lam0, the0, lam1, the1):
-    dLam = getMinDLambda(lam0, lam1)
-    dThe = the1 - the0
-    if abs(dThe < EPS):
-        # same theta
-        return dLam * math.cos(0.5*(the0 + the1))
+
+def getIntegral(xa, xb, ya, yb):
+    dy = yb - ya
+    dx = getMinDLambda(xa, xb)
+    if abs(dy) > EPS:
+        return -(alpha*(-ya + yb)) - \
+          (dx*(-2*(-1 + alpha*xa)*(ya - yb)*cos(2*ya) + \
+            2*(-1 + alpha*xb)*(ya - yb)*cos(2*yb) + \
+            alpha*(-dx)*(sin(2*ya) - sin(2*yb))))/(8.*(ya - yb)**2)
     else:
-        # normal case
-        return dLam * (math.sin(the1) - math.sin(the0)) / dThe
-
-
-def getSinTwoThetaDLambda(lam0, the0, lam1, the1):
-    dLam = getMinDLambda(lam0, lam1)
-    dThe = the1 - the0
-    if abs(dThe < EPS):
-        # same theta
-        return dLam * math.sin(the0 + the1)
-    else:
-        # normal case
-        return - 0.5 * dLam * (math.cos(2*the1) - math.cos(2*the0)) / dThe
-
-
+        return -(dx*(-(cos(ya)*sin(ya)) + \
+                (alpha*xa*cos(ya)*sin(ya))/2. + \
+                (alpha*xb*cos(ya)*sin(ya))/2.))
 
 n = 10
 cs = igCubedSphere.CubedSphere(n)
@@ -81,8 +79,7 @@ for cellId in range(numCells):
         lam1, the1 = getLambdaTheta(x1, y1, z1)
 
 
-        divVal += getCosThetaDLambda(lam0, the0, lam1, the1)
-        divVal -= 0.5 * alpha * getSinTwoThetaDLambda(lam0, the0, lam1, the1)
+        divVal += getIntegral(lam0, lam1, the0, the1)
 
     cellArea = cellAreas.GetComponent(cellId, 0)
     divData[cellId] = divVal / cellArea
