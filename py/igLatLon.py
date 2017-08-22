@@ -1,5 +1,6 @@
 import numpy
 import vtk
+import igAreas
 
 class LatLon:
 
@@ -22,6 +23,14 @@ class LatLon:
         self.xyz[:, 1] = radius*numpy.cos(llats)*numpy.sin(llons)
         self.xyz[:, 2] = radius*numpy.sin(llats)
 
+        # compute the cell areas
+        self.areas = igAreas.getCellAreas(self.xyz, n0=numLats1, n1=numLons1)
+        self.vareas = vtk.vtkDoubleArray()
+        self.vareas.SetName('cell_areas')
+        self.vareas.SetNumberOfComponents(1)
+        self.vareas.SetNumberOfTuples(numLats * numLons)
+        self.vareas.SetVoidArray(self.areas, numLats * numLons, 1)
+
         # create the VTK unstructired grid
         self.vxyz = vtk.vtkDoubleArray()
         self.vxyz.SetNumberOfComponents(3)
@@ -36,6 +45,8 @@ class LatLon:
         self.sgrid = vtk.vtkStructuredGrid()
         self.sgrid.SetDimensions(numLats1, numLons1, 1)
         self.sgrid.SetPoints(self.pts)
+
+        self.sgrid.GetCellData().SetScalars(self.vareas)
 
         self.appendGrids.AddInputData(self.sgrid)
         self.appendGrids.Update()

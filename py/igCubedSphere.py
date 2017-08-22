@@ -1,5 +1,6 @@
 import numpy
 import vtk
+import igAreas
 
 class CubedSphere:
 
@@ -62,7 +63,7 @@ class CubedSphere:
                     xyz[:, i] *= radius
 
                 # compute the cell areas
-                areas = self.getCellAreas(xyz)
+                areas = igAreas.getCellAreas(xyz, n0=numPointsPerTile, n1=numPointsPerTile)
                 tileAreas = vtk.vtkDoubleArray()
                 tileAreas.SetName('cell_areas')
                 tileAreas.SetNumberOfComponents(1)
@@ -97,37 +98,6 @@ class CubedSphere:
 
         self.appendGrids.Update()
         self.grid = self.appendGrids.GetOutput()
-
-    def getCornerCoords(self, xyz, coordIndex):
-        numPointsPerTile = int(numpy.sqrt(xyz.shape[0]))
-        xx = xyz[:, coordIndex].reshape(numPointsPerTile, numPointsPerTile)
-        xx0 = xx[:-1, :-1]
-        xx1 = xx[1:, :-1]
-        xx2 = xx[1:, 1:]
-        xx3 = xx[:-1, 1:]
-        return xx0, xx1, xx2, xx3
-
-
-    def getTriangleAreas(self, xx0, xx1, xx2, yy0, yy1, yy2, zz0, zz1, zz2):
-        dxx10, dyy10, dzz10 = xx1 - xx0, yy1 - yy0, zz1 - zz0
-        dxx20, dyy20, dzz20 = xx2 - xx0, yy2 - yy0, zz2 - zz0
-        areasxx = dyy10*dzz20 - dyy20*dzz10
-        areasyy = dzz10*dxx20 - dzz20*dxx10
-        areaszz = dxx10*dyy20 - dxx20*dyy10
-        xx = (xx0 + xx1 + xx2)/3.
-        yy = (yy0 + yy1 + yy2)/3.
-        zz = (zz0 + zz1 + zz2)/3.
-        rr = numpy.sqrt(xx**2 + yy**2 + zz**2)
-        return (areasxx*xx + areasyy*yy + areaszz*zz)/rr
-
-
-    def getCellAreas(self, xyz):
-        xx0, xx1, xx2, xx3 = self.getCornerCoords(xyz, 0)
-        yy0, yy1, yy2, yy3 = self.getCornerCoords(xyz, 1)
-        zz0, zz1, zz2, zz3 = self.getCornerCoords(xyz, 2)
-        areas = self.getTriangleAreas(xx0, xx1, xx3, yy0, yy1, yy3, zz0, zz1, zz3)
-        areas += self.getTriangleAreas(xx2, xx3, xx1, yy2, yy3, yy1, zz2, zz3, zz1)
-        return areas
 
 
     def getUnstructuredGrid(self):

@@ -5,13 +5,13 @@ import numpy
 
 """
 Compute cosed line integral of d * d phi with 
-phi = (1 - alpha lambda) * cos(theta)
+phi = (1 - alpha sin(lambda)) * cos(theta)
 """
 
 
 EPS = 1.e-14
 
-alpha = 0.0
+alpha = 1.0
 
 
 def getLambdaTheta(x, y, z):
@@ -34,16 +34,20 @@ def getIntegral(xa, xb, ya, yb):
     dy = yb - ya
     dx = getMinDLambda(xa, xb)
     if abs(dy) > EPS:
-        return -(alpha*(-ya + yb)) - \
-          (dx*(-2*(-1 + alpha*xa)*(ya - yb)*cos(2*ya) + \
-            2*(-1 + alpha*xb)*(ya - yb)*cos(2*yb) + \
-            alpha*(-dx)*(sin(2*ya) - sin(2*yb))))/(8.*(ya - yb)**2)
+        if abs(dx) > EPS:
+            res = -((alpha*dy*(-sin(xa) + sin(xb)))/dx) - \
+                  (dx*((cos(2*ya) - cos(2*yb))/(-dy) + \
+                  (alpha*(sin(xa - 2*ya) - sin(xb - 2*yb)))/(-dx + 2*dy) + \
+                  (alpha*(-sin(xa + 2*ya) + sin(xb + 2*yb)))/(-dx - 2*dy)))/4.
+        else:
+            # xa == xb
+            res = -(alpha*dy*cos(xa))
     else:
-        return -(dx*(-(cos(ya)*sin(ya)) + \
-                (alpha*xa*cos(ya)*sin(ya))/2. + \
-                (alpha*xb*cos(ya)*sin(ya))/2.))
+        # ya == yb
+        res = -(((dx)*(dx - alpha*cos(xa) + alpha*cos(xb))*cos(ya)*sin(ya))/(-dx))
+    return res
 
-n = 100
+n = 20
 cs = igCubedSphere.CubedSphere(n)
 grid = cs.getUnstructuredGrid()
 
@@ -95,5 +99,5 @@ dataArray.SetVoidArray(divData, numCells, save)
 grid.GetCellData().SetScalars(dataArray)
 
 # save/show
-cs.save('divCubedSphere1.vtk')
+cs.save('divCubedSphere2.vtk')
 cs.show()
