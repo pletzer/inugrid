@@ -86,7 +86,6 @@ for cellId in range(numCells):
         lam0, the0 = getLambdaTheta(x0, y0, z0)
         lam1, the1 = getLambdaTheta(x1, y1, z1)
 
-
         divVal += getIntegral(lam0, lam1, the0, the1)
 
     cellArea = cellAreas.GetComponent(cellId, 0)

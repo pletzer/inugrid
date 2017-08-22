@@ -13,17 +13,18 @@ class LatLon:
         numLats1, numLons1 = numLats + 1, numLons + 1
         lats = numpy.linspace(-numpy.pi/2., numpy.pi/2., numLats1)
         lons = numpy.linspace(0., 2*numpy.pi, numLons1)
-        llats, llons = numpy.meshgrid(lats, lons)
+        llons, llats = numpy.meshgrid(lons, lats)
         llats = llats.flat
         llons = llons.flat
 
         # coordinates
         self.xyz = numpy.zeros((numLats1*numLons1, 3), numpy.float64)
-        self.xyz[:, 0] = radius*numpy.cos(llats)*numpy.cos(llons)
-        self.xyz[:, 1] = radius*numpy.cos(llats)*numpy.sin(llons)
+        rrho = radius*numpy.cos(llats)
+        self.xyz[:, 0] = rrho*numpy.cos(llons)
+        self.xyz[:, 1] = rrho*numpy.sin(llons)
         self.xyz[:, 2] = radius*numpy.sin(llats)
 
-        # compute the cell areas
+        # compute the cell areas, enforce positiveness (not sure why all the areas are negative)
         self.areas = igAreas.getCellAreas(self.xyz, n0=numLats1, n1=numLons1)
         self.vareas = vtk.vtkDoubleArray()
         self.vareas.SetName('cell_areas')
@@ -31,7 +32,7 @@ class LatLon:
         self.vareas.SetNumberOfTuples(numLats * numLons)
         self.vareas.SetVoidArray(self.areas, numLats * numLons, 1)
 
-        # create the VTK unstructired grid
+        # create the VTK unstructured grid
         self.vxyz = vtk.vtkDoubleArray()
         self.vxyz.SetNumberOfComponents(3)
         ntot = numLats1 * numLons1
@@ -43,7 +44,7 @@ class LatLon:
         self.pts.SetData(self.vxyz)
 
         self.sgrid = vtk.vtkStructuredGrid()
-        self.sgrid.SetDimensions(numLats1, numLons1, 1)
+        self.sgrid.SetDimensions(numLons1, numLats1, 1)
         self.sgrid.SetPoints(self.pts)
 
         self.sgrid.GetCellData().SetScalars(self.vareas)
@@ -96,11 +97,11 @@ class LatLon:
 
 #############################################################################
 def test():
-    numLat, numLon = 16, 32
+    numLat, numLon = 8, 16
     ll = LatLon(numLat, numLon)
     grid = ll.getUnstructuredGrid()
     ll.save('ll.vtk')
-    ll.show()
+    #ll.show()
 
 if __name__ == '__main__':
     test()
