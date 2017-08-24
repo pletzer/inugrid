@@ -21,7 +21,7 @@ class FluxCalculator:
         self.totalFlux = 0.0
         xiBeg = numpy.zeros((2,), numpy.float64) # 2D
         xiEnd = numpy.zeros((2,), numpy.float64) # 2D
-        ptIds = vtk.vtk
+        intersector = CellLineIntersector()
         nSegs = self.xyzLine.shape[0] - 1
         # iterate over the segments of the line
     	for iSeg in range(nSegs):
