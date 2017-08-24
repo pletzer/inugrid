@@ -225,17 +225,29 @@ class FluxCalculator:
                     # iterate over the edges
                     for i0 in range(numPts):
                         i1 = (i0 + 1) % numPts
+
                         ptId0, ptId1 = ptIds.GetId(i0), ptIds.GetId(i1)
                         xyz0, xyz1 = self.grid.GetPoint(ptId0), self.grid.GetPoint(ptId1)
+
                         lam0, the0 = self._getLambdaThetaFromXYZ(xyz0)
                         lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
+
+                        # assumes counterclockwise orientation
                         faceFlux = integralFunction(lam0, lam1, the0, the1)
+
+                        # update the fluxes
                         self.totalFlux += faceFlux * basisIntegrator(i0)
 
         return self.totalFlux
 
 
     def _findCells(self, xyz0, xyz1):
+        """
+        Find all the cells intersected by the line that goes through xyz0 and xyz1
+        @param xyz0 starting point
+        @param xyz1 ending point
+        @return list of cells
+        """
     	cellIds = vtk.vtkIdList()
         tol = 1.e-3
         self.cellLoc.FindCellsAlongLine(xyz0, xyz1, tol, cellIds)
@@ -243,6 +255,12 @@ class FluxCalculator:
         return [cellIds.GetId(i) for i in range(numCells)]
 
     def _getXYZFromLambdaTheta(self, lam, the):
+        """
+        Convert from lon/lat to x, y, z
+        @param lam longitude in radiant
+        @param the latitude in radiant
+        @return Cartesian coordinates
+        """
         rho = cos(the)
         x = rho * cos(lam)
         y = rho * sin(lam)
@@ -250,6 +268,11 @@ class FluxCalculator:
         return x, y, z
 
     def _getLambdaThetaFromXYZ(self, xyz):
+        """
+        Convert from Cartesian to lon/lat coordinates
+        @param xyz point 
+        @return longitude, latitude
+        """
         x, y, z = xyz
         rho = sqrt(x**2 + y**2)
         the = atan2(z, rho)
