@@ -286,25 +286,25 @@ def testBasisFunctionIntegral0():
     xiA, xiB = numpy.array((0., 0.)), numpy.array((1., 0.))
     bi = BasisFunctionIntegral(xiA, xiB)
     for i in range(4):
-        print bi(i)
+        print('testBasisFunctionIntegral0: i = {} weight = {}'.format(i, bi(i)))
 
 def testBasisFunctionIntegral1():
     xiA, xiB = numpy.array((1., 0.)), numpy.array((1., 1.))
     bi = BasisFunctionIntegral(xiA, xiB)
     for i in range(4):
-        print bi(i)
+        print('testBasisFunctionIntegral1: i = {} weight = {}'.format(i, bi(i)))
 
 def testBasisFunctionIntegral2():
     xiA, xiB = numpy.array((1., 1.)), numpy.array((0., 1.))
     bi = BasisFunctionIntegral(xiA, xiB)
     for i in range(4):
-        print bi(i)
+        print('testBasisFunctionIntegral2: i = {} weight = {}'.format(i, bi(i)))
 
 def testBasisFunctionIntegral3():
     xiA, xiB = numpy.array((0., 1.)), numpy.array((0., 0.))
     bi = BasisFunctionIntegral(xiA, xiB)
     for i in range(4):
-        print bi(i)
+        print('testBasisFunctionIntegral3: i = {} weight = {}'.format(i, bi(i)))
 
 def testCellLineIntersector0():
 
@@ -328,6 +328,8 @@ def testCellLineIntersector0():
     xiEnd = numpy.zeros((2,), numpy.float64)
 
     found = cli.findIntersection(xiBeg, xiEnd)
+
+    print('testCellLineIntersector0: found = {} xiBeg = {} xiEnd = {}'.format(found, xiBeg, xiEnd))
 
 if __name__ == '__main__':
     testBasisFunctionIntegral0()
