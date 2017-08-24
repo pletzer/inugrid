@@ -29,6 +29,7 @@ def getMinDLambda(lam0, lam1):
 
 def getIntegral(xa, xb, ya, yb):
     """
+    Compute the value attached to an edge
     x is longitude
     y is latitude
     """
