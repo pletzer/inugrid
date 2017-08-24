@@ -3,20 +3,20 @@ import numpy
 
 class FluxCalculator:
 
-	def __init__(self, grid, integralFunction):
-		self.grid = grid
+    def __init__(self, grid, integralFunction):
+    	self.grid = grid
         self.fieldName = ''
         self.xyzLine = []
         self.totalFlux = 0.0
 
-	def setLine(self, lamThes):
-		n = len(lamThes)
+    def setLine(self, lamThes):
+    	n = len(lamThes)
         self.xyzLine = numpy.zeros((n, 3), numpy.float64)
         for i in range(n):
             lam, the = lamThes[i, :]
             self.xyzLine[i, :] = self._getXYZFromLambdaTheta(lam, the)
 
-	def computeFlux(self):
+    def computeFlux(self):
 
         self.totalFlux = 0.0
         xiBeg = numpy.zeros((2,), numpy.float64) # 2D
@@ -24,7 +24,7 @@ class FluxCalculator:
         ptIds = vtk.vtk
         nSegs = self.xyzLine.shape[0] - 1
         # iterate over the segments of the line
-		for iSeg in range(nSegs):
+    	for iSeg in range(nSegs):
             xyzA = self.xyzLine[iSeg, :]
             xyzB = self.xyzLine[iSeg + 1, :]
             lamA, theA = self._getLambdaThetaFromXYZ(xyzA)
@@ -69,13 +69,13 @@ class FluxCalculator:
         return self.totalFlux
 
 
-	def _findCells(self, xyz0, xyz1):
-		pass
+    def _findCells(self, xyz0, xyz1):
+    	pass
 
-	def _addCellContributionToFlux(self, cellId):
-		pass
+    def _addCellContributionToFlux(self, cellId):
+    	pass
 
-	def _addEdgeContributionToFlux(self, cellId, edgeId):
+    def _addEdgeContributionToFlux(self, cellId, edgeId):
         pass
 
     def _getXYZFromLambdaTheta(self, lam, the):
