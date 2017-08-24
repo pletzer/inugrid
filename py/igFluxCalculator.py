@@ -40,27 +40,30 @@ class CellLineIntersector:
         """
         Constructor
         """
-        self.pts = vtk.vtkPoints()
-        self.pts.SetNumberOfPoints(4)
-
         self.quad = vtk.vtkQuad()
-        self.quad.SetPoints(self.pts)
+        self.pts = self.quad.GetPoints()
 
         # starting point of the line
         self.pA = numpy.zeros((3,), numpy.float64)
         # ending point of the line
         self.pB = numpy.zeros((3,), numpy.float64)
 
-        # work array (not used)
+        # intersection point
         self.x = numpy.zeros((3,), numpy.float64)
+
+        # parametric coordinates
         self.xi = numpy.zeros((3,), numpy.float64)
+
+        # point closest to the intersection
         self.closestPoint = numpy.zeros((3,), numpy.float64)
-        self.weights = numpy.zeros((4,), numpy.float64) # sized number of points
+
+        # interpolation weights, 4 values for a quad
+        self.weights = numpy.zeros((4,), numpy.float64)
 
         # tolerance for decising if a line intersects with a cell
         self.tol = 1.e-14
 
-    def setLine(self, lamA, thetA, lamB, theB):
+    def setLine(self, lamA, theA, lamB, theB):
         """
         Set the line
         @param lamA longitude of starting point (in radiant)
@@ -98,7 +101,6 @@ class CellLineIntersector:
         # parametric coordinate along the line (0 <= t <= 1)
         t = vtk.mutable(-1.0)
         subId = vtk.mutable(-1)
-        closedPoint = vtk.mutable(0.0)
 
         dist = vtk.mutable(0.0)
         res1 = 0
@@ -107,29 +109,29 @@ class CellLineIntersector:
         pB = self.pB.copy()
 
         # find if starting point is inside
-        insideA = self.quad.EvaluatePosition(pA, self.closedPoint, subId, self.xi, dist, self.weights)
+        insideA = self.quad.EvaluatePosition(pA, self.closestPoint, subId, self.xi, dist, self.weights)
         if insideA == 1:
             # self.pA is inside cell
-            xiBeg[:] = self.xi
+            xiBeg[:] = self.xi[:2]
         else:
             # self.pA is outside the cell
             res1 = self.quad.IntersectWithLine(pA, pB, self.tol, t, self.x, self.xi, subId)
             if res1:
-                xiBeg[:] = self.xi
+                xiBeg[:] = self.xi[:2]
                 # move the starting point up for the next search
                 pA = self.x + 2*self.tol*(self.pB - self.pA)
 
         # find if ending position is inside
-        insideB = self.quad.EvaluatePosition(pB, self.closedPoint, subId, self.xi, dist, self.weights)
+        insideB = self.quad.EvaluatePosition(pB, self.closestPoint, subId, self.xi, dist, self.weights)
         if insideB == 1:
             # self.pB is inside cell
-            xiEnd[:] = pB
+            xiEnd[:] = self.xi[:2]
         else:
             res2 = self.quad.IntersectWithLine(pA, pB, self.tol, t, self.x, self.xi, subId)
             if res2:
-                xiEnd[:] = self.xi
+                xiEnd[:] = self.xi[:2]
 
-        return (isInsideA == 1 or res1) and (insideB == 1 or res2)
+        return (insideA == 1 or res1) and (insideB == 1 or res2)
 
 
 class FluxCalculator:
