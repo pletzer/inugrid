@@ -304,9 +304,34 @@ def testBasisFunctionIntegral3():
     for i in range(4):
         print bi(i)
 
+def testCellLineIntersector0():
+
+    lam0, the0 = 0., 0.
+    lam1, the1 = 1., 0.
+    lam2, the2 = 1., 1.
+    lam3, the3 = 0., 1.
+
+    lamA, theA = -0.5, 0.5
+    lamB, theB = 0.5, 0.5
+
+    cli = CellLineIntersector()
+    cli.setCell(lam0, the0,
+                lam1, the1, 
+                lam2, the2, 
+                lam3, the3)
+    cli.setLine(lamA, theA,
+                lamB, theB)
+
+    xiBeg = numpy.zeros((2,), numpy.float64)
+    xiEnd = numpy.zeros((2,), numpy.float64)
+
+    found = cli.findIntersection(xiBeg, xiEnd)
+
 if __name__ == '__main__':
     testBasisFunctionIntegral0()
     testBasisFunctionIntegral1()
     testBasisFunctionIntegral2()
     testBasisFunctionIntegral3()
+
+    testCellLineIntersector0()
 
