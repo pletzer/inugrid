@@ -17,7 +17,7 @@ class BasisFunctionIntegral:
         # average
         aXis = 0.5*(xisA + xisB)
 
-        self.value = {0: dXis[0]*(1.0 - aXis[2]),
+        self.value = {0: dXis[0]*(1.0 - aXis[1]),
                       1: dXis[1]*aXis[0],
                       2: -dXis[0]*aXis[1],           # negative sign 
                       3: -dXis[1]*(1.0 - aXis[0]),}  # negative sign
@@ -278,4 +278,35 @@ class FluxCalculator:
         the = atan2(z, rho)
         lam = atan2(y, x)
         return lam, the
+
+###############################################################################
+def testBasisFunctionIntegral0():
+    xiA, xiB = numpy.array((0., 0.)), numpy.array((1., 0.))
+    bi = BasisFunctionIntegral(xiA, xiB)
+    for i in range(4):
+        print bi(i)
+
+def testBasisFunctionIntegral1():
+    xiA, xiB = numpy.array((1., 0.)), numpy.array((1., 1.))
+    bi = BasisFunctionIntegral(xiA, xiB)
+    for i in range(4):
+        print bi(i)
+
+def testBasisFunctionIntegral2():
+    xiA, xiB = numpy.array((1., 1.)), numpy.array((0., 1.))
+    bi = BasisFunctionIntegral(xiA, xiB)
+    for i in range(4):
+        print bi(i)
+
+def testBasisFunctionIntegral3():
+    xiA, xiB = numpy.array((0., 1.)), numpy.array((0., 0.))
+    bi = BasisFunctionIntegral(xiA, xiB)
+    for i in range(4):
+        print bi(i)
+
+if __name__ == '__main__':
+    testBasisFunctionIntegral0()
+    testBasisFunctionIntegral1()
+    testBasisFunctionIntegral2()
+    testBasisFunctionIntegral3()
 
