@@ -10,27 +10,28 @@ class CellLineIntersector:
         """
         Constructor
         """
-        self.quad = vtk.vtkQuad()
-        self.pts = self.quad.GetPoints()
+        # intersecvtions are computed in 3d between lines and faces, so need 
+        # to create a 3d hexahedron
+        self.cell = vtk.vtkHexahedron()
+        self.pts = self.cell.GetPoints()
 
-        # starting point of the line
+        # starting/ending points of the line
         self.pA = numpy.zeros((3,), numpy.float64)
-        # ending point of the line
         self.pB = numpy.zeros((3,), numpy.float64)
 
         # intersection point
-        self.x = numpy.zeros((3,), numpy.float64)
+        self.intersectPt = numpy.zeros((3,), numpy.float64)
 
-        # parametric coordinates
+        # parametric coordinates (3d)
         self.xi = numpy.zeros((3,), numpy.float64)
 
         # point closest to the intersection
         self.closestPoint = numpy.zeros((3,), numpy.float64)
 
-        # interpolation weights, 4 values for a quad
-        self.weights = numpy.zeros((4,), numpy.float64)
+        # interpolation weights, 8 values for hex
+        self.weights = numpy.zeros((8,), numpy.float64)
 
-        # tolerance for decising if a line intersects with a cell
+        # tolerance for deciding if a line intersects with a cell
         self.tol = 1.e-14
 
     def setLine(self, lamA, theA, lamB, theB):
@@ -56,21 +57,28 @@ class CellLineIntersector:
         @param lam3 longitude vertex
         @param the3 latitude vertex
         """
-        self.pts.InsertPoint(0, lam0, the0, 0.0)
-        self.pts.InsertPoint(1, lam1, the1, 0.0)
-        self.pts.InsertPoint(2, lam2, the2, 0.0)
-        self.pts.InsertPoint(3, lam3, the3, 0.0)
+        self.pts.InsertPoint(0, lam0, the0, -0.5)
+        self.pts.InsertPoint(1, lam1, the1, -0.5)
+        self.pts.InsertPoint(2, lam2, the2, -0.5)
+        self.pts.InsertPoint(3, lam3, the3, -0.5)
+
+        # add the elevation coordinates
+        self.pts.InsertPoint(4, lam0, the0, 0.5)
+        self.pts.InsertPoint(5, lam1, the1, 0.5)
+        self.pts.InsertPoint(6, lam2, the2, 0.5)
+        self.pts.InsertPoint(7, lam3, the3, 0.5)
+
 
     def findIntersection(self, xiBeg, xiEnd):
         """
-        Find intersection of quad with line
+        Find intersection of hex with line
         @param xiBeg the starting parametric coordinates (output)
         @param xiEnd the ending parametric coordinates (output)
         @return True if an intersection was found
         """
         # parametric coordinate along the line (0 <= t <= 1)
-        t = vtk.mutable(-1.0)
-        subId = vtk.mutable(-1)
+        t = vtk.mutable(0.0)
+        subId = vtk.mutable(0)
 
         dist = vtk.mutable(0.0)
         res1 = 0
@@ -79,25 +87,25 @@ class CellLineIntersector:
         pB = self.pB.copy()
 
         # find if starting point is inside
-        insideA = self.quad.EvaluatePosition(pA, self.closestPoint, subId, self.xi, dist, self.weights)
+        insideA = self.cell.EvaluatePosition(pA, self.closestPoint, subId, self.xi, dist, self.weights)
         if insideA == 1:
             # self.pA is inside cell
             xiBeg[:] = self.xi[:2]
         else:
             # self.pA is outside the cell
-            res1 = self.quad.IntersectWithLine(pA, pB, self.tol, t, self.x, self.xi, subId)
+            res1 = self.cell.IntersectWithLine(pA, pB, self.tol, t, self.intersectPt, self.xi, subId)
             if res1:
                 xiBeg[:] = self.xi[:2]
                 # move the starting point up for the next search
-                pA = self.x + 2*self.tol*(self.pB - self.pA)
+                pA = self.intersectPt + 2*self.tol*(self.pB - self.pA)
 
         # find if ending position is inside
-        insideB = self.quad.EvaluatePosition(pB, self.closestPoint, subId, self.xi, dist, self.weights)
+        insideB = self.cell.EvaluatePosition(pB, self.closestPoint, subId, self.xi, dist, self.weights)
         if insideB == 1:
             # self.pB is inside cell
             xiEnd[:] = self.xi[:2]
         else:
-            res2 = self.quad.IntersectWithLine(pA, pB, self.tol, t, self.x, self.xi, subId)
+            res2 = self.cell.IntersectWithLine(pA, pB, self.tol, t, self.intersectPt, self.xi, subId)
             if res2:
                 xiEnd[:] = self.xi[:2]
 
