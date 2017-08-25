@@ -156,23 +156,24 @@ class FluxCalculator:
         return lam, the
 
 ###############################################################################
-def testDivFreeClosed():
+
+def psi(x, y):
+    # stream function
+    # x: longitude
+    # y: latitude
+    return math.sin(x)*math.cos(y)
+
+# define form
+def edgeIntegral(xa, xb, ya, yb):
+    """
+    Compute the value attached to an edge
+    x is longitude
+    y is latitude
+    """
+    return psi(xb, yb) - psi(xa, ya)
+
+def testClosed():
     from igLatLon import LatLon
-
-    def psi(x, y):
-        # stream function
-        # x: longitude
-        # y: latitude
-        return math.sin(2*x)*math.cos(y)
-
-    # define form
-    def edgeIntegral(xa, xb, ya, yb):
-        """
-        Compute the value attached to an edge
-        x is longitude
-        y is latitude
-        """
-        return psi(xb, yb) - psi(xa, ya)
 
     # create grid
     nlat, nlon = 10, 20
@@ -189,28 +190,13 @@ def testDivFreeClosed():
 
     totFlux = fc.computeFlux()
     exact = psi(lamB, theB) - psi(lamA, theA)
-    print('total flux = {} exact = {}'.format(totFlux, exact))
+    print('testClosed: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
     assert abs(totFlux - exact) < 1.e-10
 
-def testDivFreeOpen():
+def testOpen():
     from igLatLon import LatLon
-
-    def psi(x, y):
-        # stream function
-        # x: longitude
-        # y: latitude
-        return math.sin(2*x)*math.cos(y)
-
-    # define form
-    def edgeIntegral(xa, xb, ya, yb):
-        """
-        Compute the value attached to an edge
-        x is longitude
-        y is latitude
-        """
-        return psi(xb, yb) - psi(xa, ya)
 
     # create grid
     nlat, nlon = 10, 20
@@ -228,11 +214,83 @@ def testDivFreeOpen():
 
     totFlux = fc.computeFlux()
     exact = psi(lamB, theB) - psi(lamA, theA)
-    print('total flux = {} exact = {}'.format(totFlux, exact))
+    print('testOpen: total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    assert abs(totFlux - exact) < 1.e-10
+
+def testOpenSmall():
+    from igLatLon import LatLon
+
+    # create grid
+    nlat, nlon = 2, 4
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    lamA, theA =        0.0, 0.0
+    lamB, theB = math.pi/2., 0.0
+    line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('testOpenSmall: total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    assert abs(totFlux - exact) < 1.e-10
+
+def testOpenSmall2():
+    from igLatLon import LatLon
+
+    # create grid
+    nlat, nlon = 2, 4
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    lamA, theA =        0.0, 1.e-6
+    lamB, theB = math.pi/2., 1.e-6
+    line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('testOpenSmall: total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    assert abs(totFlux - exact) < 1.e-10
+
+def testOpenSmall3():
+    from igLatLon import LatLon
+
+    # create grid
+    nlat, nlon = 2, 4
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    piHalf = 0.5*math.pi
+    lamA, theA = piHalf*0.2, piHalf*0.5
+    lamB, theB = piHalf*0.8, piHalf*0.5
+    line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('testOpenSmall: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
     assert abs(totFlux - exact) < 1.e-10
 
 if __name__ == '__main__':
-    testDivFreeClosed()
-    testDivFreeOpen()
+    testOpenSmall()
+    testOpenSmall2()
+    testOpenSmall3()
+    #testClosed()
