@@ -156,7 +156,7 @@ class FluxCalculator:
         return lam, the
 
 ###############################################################################
-def testDivFree():
+def testDivFreeClosed():
     from igLatLon import LatLon
 
     def psi(x, y):
@@ -182,14 +182,57 @@ def testDivFree():
     # compute flux
     fc = FluxCalculator(grd, edgeIntegral)
 
-    line = numpy.array([(-math.pi, 0.0), (math.pi, 0.0)], numpy.float64).reshape(2, 2)
+    lamA, theA = -math.pi, math.pi/5.
+    lamB, theB = math.pi, math.pi/5.
+    line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
     fc.setLine(line)
 
     totFlux = fc.computeFlux()
-    print('total flux = {}'.format(totFlux))
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
-    assert abs(totFlux) < 1.e-10
+    assert abs(totFlux - exact) < 1.e-10
+
+def testDivFreeOpen():
+    from igLatLon import LatLon
+
+    def psi(x, y):
+        # stream function
+        # x: longitude
+        # y: latitude
+        return math.sin(2*x)*math.cos(y)
+
+    # define form
+    def edgeIntegral(xa, xb, ya, yb):
+        """
+        Compute the value attached to an edge
+        x is longitude
+        y is latitude
+        """
+        return psi(xb, yb) - psi(xa, ya)
+
+    # create grid
+    nlat, nlon = 10, 20
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    lamA, theA = -math.pi, math.pi/5.
+    lamB, theB = 0.0, math.pi/5.
+    line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
+    fc.setLine(line)
+
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    assert abs(totFlux - exact) < 1.e-10
 
 if __name__ == '__main__':
-    testDivFree()
+    testDivFreeClosed()
+    testDivFreeOpen()
