@@ -1,7 +1,8 @@
 import vtk
 import numpy
+import math
 from igBasisFunctionIntegral import BasisFunctionIntegral
-
+from igCellLineIntersector import CellLineIntersector
 
 
 class FluxCalculator:
@@ -16,6 +17,8 @@ class FluxCalculator:
         @param integralFunction function of (lam0, lam1, the0, the1)
         """
     	self.grid = grid
+        self.integralFunction = integralFunction
+
         # array of x, y, z positions along the line
         self.xyzLine = []
 
@@ -23,7 +26,7 @@ class FluxCalculator:
 
         # to find the cells of self.grid that are intersected by the line
         self.cellLoc = vtk.vtkCellLocator()
-        self.cellLoc.SetDataSet(self.grid.GetOutput())
+        self.cellLoc.SetDataSet(self.grid)
         self.cellLoc.BuildLocator()
 
     def setLine(self, lamThes):
@@ -63,7 +66,7 @@ class FluxCalculator:
             # get the lon/lat
             lamA, theA = self._getLambdaThetaFromXYZ(xyzA)
             lamB, theB = self._getLambdaThetaFromXYZ(xyzB)
-            intersector.setLine(lamA, thetA, lamB, theB)
+            intersector.setLine(lamA, theA, lamB, theB)
 
             # iterate over the grid cells that are (likely) intersected by the line segment
             # xyzA -> xyzB
@@ -95,6 +98,7 @@ class FluxCalculator:
                     basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
 
                     # iterate over the edges
+                    numPts = 4
                     for i0 in range(numPts):
                         i1 = (i0 + 1) % numPts
 
@@ -105,7 +109,7 @@ class FluxCalculator:
                         lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
 
                         # assumes counterclockwise orientation
-                        faceFlux = integralFunction(lam0, lam1, the0, the1)
+                        faceFlux = self.integralFunction(lam0, lam1, the0, the1)
 
                         # update the fluxes
                         self.totalFlux += faceFlux * basisIntegrator(i0)
@@ -123,7 +127,7 @@ class FluxCalculator:
     	cellIds = vtk.vtkIdList()
         tol = 1.e-3
         self.cellLoc.FindCellsAlongLine(xyz0, xyz1, tol, cellIds)
-        numCells = cellids.GetNumberOfIds()
+        numCells = cellIds.GetNumberOfIds()
         return [cellIds.GetId(i) for i in range(numCells)]
 
     def _getXYZFromLambdaTheta(self, lam, the):
@@ -133,10 +137,10 @@ class FluxCalculator:
         @param the latitude in radiant
         @return Cartesian coordinates
         """
-        rho = cos(the)
-        x = rho * cos(lam)
-        y = rho * sin(lam)
-        z = sin(the)
+        rho = math.cos(the)
+        x = rho * math.cos(lam)
+        y = rho * math.sin(lam)
+        z = numpy.sin(the)
         return x, y, z
 
     def _getLambdaThetaFromXYZ(self, xyz):
@@ -146,8 +150,46 @@ class FluxCalculator:
         @return longitude, latitude
         """
         x, y, z = xyz
-        rho = sqrt(x**2 + y**2)
-        the = atan2(z, rho)
-        lam = atan2(y, x)
+        rho = math.sqrt(x**2 + y**2)
+        the = math.atan2(z, rho)
+        lam = math.atan2(y, x)
         return lam, the
 
+###############################################################################
+def testDivFree():
+    from igLatLon import LatLon
+
+    def psi(x, y):
+        # stream function
+        # x: longitude
+        # y: latitude
+        return math.sin(2*x)*math.cos(y)
+
+    # define form
+    def edgeIntegral(xa, xb, ya, yb):
+        """
+        Compute the value attached to an edge
+        x is longitude
+        y is latitude
+        """
+        return psi(xb, yb) - psi(xa, ya)
+
+    # create grid
+    nlat, nlon = 10, 20
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    line = numpy.array([(-math.pi, 0.0), (math.pi, 0.0)], numpy.float64).reshape(2, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    print('total flux = {}'.format(totFlux))
+
+    # check
+    assert abs(totFlux) < 1.e-10
+
+if __name__ == '__main__':
+    testDivFree()
