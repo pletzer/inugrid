@@ -220,8 +220,8 @@ def testDivFreeOpen():
     # compute flux
     fc = FluxCalculator(grd, edgeIntegral)
 
-    lamA, theA = -math.pi, math.pi/5.
-    lamB, theB = 0.0, math.pi/5.
+    lamA, theA = -math.pi, math.pi/5.324325
+    lamB, theB = 0.0, math.pi/5.324325
     line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
     fc.setLine(line)
 
