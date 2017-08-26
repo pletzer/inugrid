@@ -14,6 +14,13 @@ class LatLon:
         lats = numpy.linspace(-numpy.pi/2., numpy.pi/2., numLats1)
         lons = numpy.linspace(0., 2*numpy.pi, numLons1)
         llons, llats = numpy.meshgrid(lons, lats)
+
+        # add a tiny perturbation  to avoid issues with computing
+        # fluxes
+        #eps = 1.e-3
+        #llons += eps*numpy.cos(llats)*numpy.sin(llons)
+        #llats += eps*numpy.cos(llats)*numpy.sin(llons)
+
         llats = llats.flat
         llons = llons.flat
 

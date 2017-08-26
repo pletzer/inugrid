@@ -291,6 +291,6 @@ def testOpenSmall3():
 
 if __name__ == '__main__':
     testOpenSmall()
-    testOpenSmall2()
-    testOpenSmall3()
+    #testOpenSmall2()
+    #testOpenSmall3()
     #testClosed()
