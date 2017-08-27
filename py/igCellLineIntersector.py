@@ -115,7 +115,7 @@ class CellLineIntersector:
         insideB = self.cell.EvaluatePosition(pB, self.closestPoint, subId, self.xi, dist, self.weights)
         if insideB == 1:
             # self.pB is inside cell
-            tEnd = 1.0
+            tEnd.set(1.0)
             xiEnd[:] = self.xi[:2]
         else:
             res2 = self.cell.IntersectWithLine(pA, pB, self.tol, tEnd, self.intersectPt, self.xi, subId)

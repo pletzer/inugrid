@@ -72,6 +72,9 @@ class FluxCalculator:
             lamB, theB = self._getLambdaThetaFromXYZ(xyzB)
             intersector.setLine(lamA, theA, lamB, theB)
 
+            # (tBeg, tEnd): flux
+            lineSubsegment2Flux = {}
+
             # iterate over the grid cells that are (likely) intersected by the line segment
             # xyzA -> xyzB
             for cellId in self._findCells(xyzA, xyzB):
@@ -80,14 +83,7 @@ class FluxCalculator:
                 ptIds = cell.GetPointIds()
 
                 # get the vertices of the quad
-                ptId0 = ptIds.GetId(0)
-                ptId1 = ptIds.GetId(1)
-                ptId2 = ptIds.GetId(2)
-                ptId3 = ptIds.GetId(3)
-                xyz0 = self.grid.GetPoint(ptId0)
-                xyz1 = self.grid.GetPoint(ptId1)
-                xyz2 = self.grid.GetPoint(ptId2)
-                xyz3 = self.grid.GetPoint(ptId3)
+                xyz0, xyz1, xyz2, xyz3 = (self.grid.GetPoint(ptIds.GetId(i)) for i in range(4))
                 lam0, the0 = self._getLambdaThetaFromXYZ(xyz0)
                 lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
                 lam2, the2 = self._getLambdaThetaFromXYZ(xyz2)
@@ -100,6 +96,8 @@ class FluxCalculator:
                 if isIntersecting:
 
                     basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
+
+                    flux = 0.0
 
                     # iterate over the edges
                     numPts = 4
@@ -116,7 +114,13 @@ class FluxCalculator:
                         faceFlux = self.integralFunction(lam0, lam1, the0, the1)
 
                         # update the fluxes
-                        self.totalFlux += faceFlux * basisIntegrator(i0)
+                        flux += faceFlux * basisIntegrator(i0)
+
+                    # this prevents sub segments to assign duplicate fluxes to different 
+                    # cells when both tBeg and tEnd are the same
+                    lineSubsegment2Flux[tBeg.get(), tEnd.get()] = flux
+
+            self.totalFlux = numpy.sum(lineSubsegment2Flux.values())
 
         return self.totalFlux
 
