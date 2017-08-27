@@ -16,7 +16,7 @@ class Coastlines:
         self.pts = []
         self.lines = []
         self.ugrids = []
-        self.segments = []
+
         self.appendFilter = vtk.vtkAppendFilter()
 
         for s in self.sf.shapes():
@@ -34,8 +34,8 @@ class Coastlines:
 
             vpts.SetNumberOfPoints(numPoints)
 
-            segs = line.GetPointIds()
-            segs.SetNumberOfIds(numPoints)
+            ptIds = line.GetPointIds()
+            ptIds.SetNumberOfIds(numPoints)
             index = 0
             for p in s.points:
                 lam, the = p[0]*np.pi/180., p[1]*np.pi/180.
@@ -43,18 +43,17 @@ class Coastlines:
                 y = radius*np.cos(the)*np.sin(lam)
                 z = radius*np.sin(the)
                 vpts.InsertPoint(index, x, y, z)
-                segs.SetId(index, index)
+                ptIds.SetId(index, index)
                 index += 1
-            # close loop
-            segs.SetId(index, 0)
 
-            ug.InsertNextCell(line.GetCellType(), segs)
+            # one cell
+            ug.InsertNextCell(line.GetCellType(), ptIds)
             ug.SetPoints(vpts)
 
+            # append to list to prevent Python from delete referenced objects
             self.pts.append(vpts)
             self.lines.append(line)
             self.ugrids.append(ug)
-            self.segments.append(segs)
 
             self.appendFilter.AddInputData(ug)
 
