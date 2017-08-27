@@ -16,13 +16,14 @@ class Coastlines:
         self.pts = []
         self.lines = []
         self.ugrids = []
+        self.segments = []
         self.appendFilter = vtk.vtkAppendFilter()
 
         for s in self.sf.shapes():
 
             numPoints = len(s.points)
 
-            # skip some points (not sure what they represent)
+            # skip some smaller features
             if numPoints < 100:
                 # skip
                 continue
@@ -34,7 +35,7 @@ class Coastlines:
             vpts.SetNumberOfPoints(numPoints)
 
             segs = line.GetPointIds()
-            segs.SetNumberOfIds(numPoints + 1)
+            segs.SetNumberOfIds(numPoints)
             index = 0
             for p in s.points:
                 lam, the = p[0]*np.pi/180., p[1]*np.pi/180.
@@ -44,13 +45,16 @@ class Coastlines:
                 vpts.InsertPoint(index, x, y, z)
                 segs.SetId(index, index)
                 index += 1
-            segs.SetId(index, 0) # close the loop
+            # close loop
+            segs.SetId(index, 0)
+
             ug.InsertNextCell(line.GetCellType(), segs)
             ug.SetPoints(vpts)
 
             self.pts.append(vpts)
             self.lines.append(line)
             self.ugrids.append(ug)
+            self.segments.append(segs)
 
             self.appendFilter.AddInputData(ug)
 
@@ -59,7 +63,7 @@ class Coastlines:
 
     def show(self):
         """
-        Show the cloastline
+        Show the coastline
         """
         mapper = vtk.vtkDataSetMapper()
         mapper.SetInputData(self.ugrid)
