@@ -58,20 +58,16 @@ class CellLineIntersector:
         @param the3 latitude vertex
         """
 
-        # small perturbation to prevent edges to run parallel to the line,
-        # which causes the linear system to be singular
-        eps = 21.987654321234*self.tol
-
         # lower level
         self.pts.InsertPoint(0, lam0, the0, -0.5)
-        self.pts.InsertPoint(1, lam1 - eps, the1 - eps, -0.5)
+        self.pts.InsertPoint(1, lam1, the1, -0.5)
         self.pts.InsertPoint(2, lam2, the2, -0.5)
-        self.pts.InsertPoint(3, lam3 + eps, the3 + eps, -0.5)
+        self.pts.InsertPoint(3, lam3, the3, -0.5)
 
         # upper level
-        self.pts.InsertPoint(4, lam0 + eps, the0 - eps, 0.5)
+        self.pts.InsertPoint(4, lam0, the0, 0.5)
         self.pts.InsertPoint(5, lam1, the1, 0.5)
-        self.pts.InsertPoint(6, lam2 - eps, the2 - eps, 0.5)
+        self.pts.InsertPoint(6, lam2, the2, 0.5)
         self.pts.InsertPoint(7, lam3, the3, 0.5)
 
 
