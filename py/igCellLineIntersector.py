@@ -133,7 +133,10 @@ class CellLineIntersector:
 ###############################################################################
 
 def testEasy():
+
     # standard, easy intersection
+
+    tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
     lam1, the1 = 1., 0.
@@ -154,12 +157,15 @@ def testEasy():
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
 
-    found = cli.findIntersection(xiBeg, xiEnd)
+    found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     assert abs(xiBeg[0] - 0.0) < 1.e-10 and abs(xiBeg[1] - 0.5) < 1.e-10
     assert abs(xiEnd[0] - 0.5) < 1.e-10 and abs(xiEnd[1] - 0.5) < 1.e-10
 
 def test2Intersections():
+
     # 2 intersection
+
+    tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
     lam1, the1 = 1., 0.
@@ -180,12 +186,15 @@ def test2Intersections():
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
 
-    found = cli.findIntersection(xiBeg, xiEnd)
+    found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     assert abs(xiBeg[0] - 0.0) < 1.e-10 and abs(xiBeg[1] - 0.5) < 1.e-10
     assert abs(xiEnd[0] - 1.0) < 1.e-10 and abs(xiEnd[1] - 0.5) < 1.e-10
 
 def testInside():
+
     # segment is fully inside the cell
+
+    tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
     lam1, the1 = 1., 0.
@@ -206,12 +215,15 @@ def testInside():
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
 
-    found = cli.findIntersection(xiBeg, xiEnd)
+    found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     assert abs(xiBeg[0] - 0.1) < 1.e-10 and abs(xiBeg[1] - 0.5) < 1.e-10
     assert abs(xiEnd[0] - 0.9) < 1.e-10 and abs(xiEnd[1] - 0.5) < 1.e-10
 
 def testOutside():
+
     # segment is fully outside of the cell
+
+    tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
     lam1, the1 = 1., 0.
@@ -232,11 +244,14 @@ def testOutside():
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
 
-    found = cli.findIntersection(xiBeg, xiEnd)
+    found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     assert not found 
 
 def testTangent():
+
     # segment is fully outside of the cell
+
+    tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
     lam1, the1 = 1., 0.
@@ -257,7 +272,7 @@ def testTangent():
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
 
-    found = cli.findIntersection(xiBeg, xiEnd)
+    found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     print('testTangent: xiBeg = {} xiEnd = {}'.format(xiBeg, xiEnd))
 
 
