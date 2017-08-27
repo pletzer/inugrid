@@ -28,8 +28,12 @@ class LandOcean:
         Constructor
         @param textureFile PNG file with texture data
         """
+        self.transf = vtk.vtkTransform()
+        self.transf.Scale(0.25, 1., 1.)
         self.globe = vtk.vtkTexturedSphereSource()
         self.texture = vtk.vtkTexture()
+        self.texture.SetTransform(self.transf)
+        self.texture.SetInterpolate(1)
         self.reader = None
         if re.search(r'jpe?g', textureFile.split('.')[-1]):
             self.reader = vtk.vtkJPEGReader()
@@ -139,8 +143,6 @@ class LandOcean:
 
     def render(self, width=960, height=640):
 
-        self.__addImage(solarfsCfg.LOGOFILE, xpos=0.05, ypos=0.05, xpixSize=width//10)
-
         self.ren = vtk.vtkRenderer()
         self.renWin = vtk.vtkRenderWindow()
         self.iren = vtk.vtkRenderWindowInteractor()
@@ -150,7 +152,7 @@ class LandOcean:
             colorbar = vtk.vtkScalarBarActor()
             colorbar.SetLookupTable(self.dataMapper.GetLookupTable())
             colorbar.SetTitle(self.text)
-            colorbar.GetLabelTextProperty().SetFontSize(solarfsCfg.COLORBAR_TEXT_SIZE)
+            colorbar.GetLabelTextProperty().SetFontSize(14)
             self.actors.append(colorbar)
 
         self.camera = vtk.vtkCamera()
@@ -170,7 +172,7 @@ class LandOcean:
         for a in self.actors:
             self.ren.AddActor(a)
 
-        self.ren.SetBackground(solarfsCfg.WINDOW_BACKGROUND)
+        self.ren.SetBackground(0.5, 0.5, 0.5)
 
         self.renWin.SetSize(width, height)
         self.iren.Initialize()
@@ -208,7 +210,7 @@ class LandOcean:
 
 #########################################################
 def test():
-    pnt = Painter()
+    pnt = LandOcean()
     lats = numpy.arange(-20, 60.1, 1.)
     lons = numpy.arange(80,  130, 1.)
     llats = numpy.outer(lats, numpy.ones((len(lons),), numpy.float64))
