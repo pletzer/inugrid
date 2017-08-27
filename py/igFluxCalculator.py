@@ -46,7 +46,11 @@ class FluxCalculator:
         Compute the flux
         @return flux
         """
+
         self.totalFlux = 0.0
+
+        tBeg = vtk.mutable(-1.)
+        tEnd = vtk.mutable(-1.)
 
         # parametric strat end points in the cell
         xiBeg = numpy.zeros((2,), numpy.float64) # 2D
@@ -92,7 +96,7 @@ class FluxCalculator:
                 intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
                 # compute xiBeg and xiEnd
-                isIntersecting = intersector.findIntersection(xiBeg, xiEnd)
+                isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
                 if isIntersecting:
 
                     basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
