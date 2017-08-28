@@ -5,15 +5,12 @@ import numpy
 from igDivFilter import DivFilter
 
 """
-Compute cosed line integral of d * d phi with 
+Compute closed line integral of d * d phi with 
 phi = (1 - alpha sin(lambda)) * cos(theta)
-"""
 
+* d lambda = d theta ^ dr / cos(theta)
+* d theta = - cos(theta) d lambda ^ dr
 """
-Compute cosed line integral of d * d phi with 
-phi = (1 - alpha sin(lambda)) * cos(theta)
-"""
-
 
 EPS = 1.e-14
 
