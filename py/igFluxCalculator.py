@@ -120,9 +120,33 @@ class FluxCalculator:
                     # cells when both tBeg and tEnd are the same
                     lineSubsegment2Flux[tBeg.get(), tEnd.get()] = flux
 
-            self.totalFlux = numpy.sum(lineSubsegment2Flux.values())
+            self.totalFlux = self._addFluxes(lineSubsegment2Flux)
 
         return self.totalFlux
+
+
+    def _addFluxes(self, lineSubsegment2Flux):
+        """
+        Add the fluxes, taking care of duplicates
+        @param lineSubsegment2Flux dictionary whose keys are the start/end param coords and the values
+                are the flux integrals
+        @return total flux
+        """
+
+        eps = 1.2323435e-14
+
+        totalFlux = 0.0
+        totalT = 0.0
+        currentTEnd = -float('inf')
+        for tBeg, tEnd in sorted(lineSubsegment2Flux):
+            if tBeg > currentTEnd - eps:
+                totalFlux += lineSubsegment2Flux[tBeg, tEnd]
+                totalT += tEnd - tBeg
+                currentTEnd = tBeg
+
+        assert abs(totalT - 1.0) < eps
+        
+        return totalFlux
 
 
     def _findCells(self, xyz0, xyz1):
