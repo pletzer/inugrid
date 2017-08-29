@@ -23,18 +23,21 @@ class FaceBasisFunction:
             for i2 in range(n2 + 1):
                 for i1 in range(n1 + 1):
 
-                    lam = 0.0 + i3*dLambda
-                    the = theta0 + i2*dTheta
-                    rad = 1.0 + i1*dRadius
+                    lam = 0.0 + i1*dLambda/float(n1)
+                    the = theta0 + i2*dTheta/float(n2)
+                    rad = 1.0 + i3*dRadius/float(n3)
+
                     x = rad * numpy.cos(the) * numpy.cos(lam)
-                    y = rad * numpy.cos(the) * numpy.cos(lam)
+                    y = rad * numpy.cos(the) * numpy.sin(lam)
                     z = rad * numpy.sin(the)
                     self.ptArray.SetTuple(index, (x, y, z))
 
                     xi1 = 0.0 + i1*dXi1
                     xi2 = 0.0 + i2*dXi2
                     xi3 = 0.0 + i3*dXi3
-                    basisFunc = - 8.*(xi2 - 0.75)*(xi3 - 0.25)*(xi1 - 0.5)
+
+                    basisFunc = -8.*(xi2 - 0.75)*(xi3 - 0.25)*(xi1 - 0.5)
+
                     rho = numpy.sqrt(x**2 + y**2)
                     thetaHat = numpy.array([-z*numpy.cos(lam), -z*numpy.sin(lam), rho]) / rad
                     rHat = numpy.array([x, y, z]) / rad
@@ -48,7 +51,8 @@ class FaceBasisFunction:
         self.pts.SetData(self.ptArray)
 
         self.grid = vtk.vtkStructuredGrid()
-        self.SetPoints(self.pts)
+        self.grid.SetDimensions(n1 + 1, n2 + 1, n3 + 1)
+        self.grid.SetPoints(self.pts)
         self.grid.GetPointData().SetScalars(self.data)
 
     def save(self, filename):
@@ -59,5 +63,8 @@ class FaceBasisFunction:
 
 ###############################################################################
 def main():
-    fb = FaceBasisFunction(theta0=numpy.pi/5., dLambda=numpy.pi/8., dTheta=numpy.pi/8., dRadius=0.2, n1=10, n2=10, n3=10)
+    fb = FaceBasisFunction(theta0=numpy.pi/5., dLambda=2*numpy.pi/15., dTheta=numpy.pi/20., dRadius=0.2, n1=20, n2=30, n3=10)
     fb.save('faceBasis.vtk')
+
+if __name__ == '__main__':
+    main()
