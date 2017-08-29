@@ -165,7 +165,7 @@ class CubedSphere:
 
 #############################################################################
 def test():
-    numCells = 10
+    numCells = 5
     cs = CubedSphere(numCells)
     grid = cs.getUnstructuredGrid()
     cs.save('cs.vtk')
