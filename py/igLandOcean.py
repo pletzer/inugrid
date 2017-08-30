@@ -23,7 +23,7 @@ COLORMAPS = {
 
 class LandOcean:
 
-    def __init__(self, textureFile='texture_land_ocean_ice_960_2.png'):
+    def __init__(self, textureFile='texture_land_ocean_ice_960_2.png', radius=1.0):
         """
         Constructor
         @param textureFile PNG file with texture data
@@ -53,7 +53,7 @@ class LandOcean:
 
         self.globe.SetThetaResolution(128)
         self.globe.SetPhiResolution(64)
-        self.globe.SetRadius(1.0)
+        self.globe.SetRadius(radius)
 
     def setData(self, lats, lons, data, colormap='rainbow', text=''):
         """
@@ -210,7 +210,7 @@ class LandOcean:
 
 #########################################################
 def test():
-    pnt = LandOcean()
+    pnt = LandOcean(textureFile="2k_earth_daymap.jpeg")
     lats = numpy.arange(-20, 60.1, 1.)
     lons = numpy.arange(80,  130, 1.)
     llats = numpy.outer(lats, numpy.ones((len(lons),), numpy.float64))
