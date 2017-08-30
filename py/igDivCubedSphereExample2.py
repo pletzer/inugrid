@@ -1,6 +1,7 @@
 import igCubedSphere
 import vtk
 import numpy
+from math import cos, sin, pi, sqrt
 from igDivFilter import DivFilter
 
 """

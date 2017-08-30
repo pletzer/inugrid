@@ -69,23 +69,26 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Create polyline')
-    parser.add_argument('--points', type=str, default='[(-180., 0.), (180., 0.)]', help='List of lon-lat points in degrees')
+    parser.add_argument('--points', type=str, 
+                        default='[(160.,-50.), (170., -30.), (180., -40.), (170., -50.), (160., -50.)]',
+                        help='List of lon-lat points in degrees')
     args = parser.parse_args()
 
     pts = numpy.array(eval(args.points))
+    nt = len(pts)
 
     def lamFunc(ts):
-        i0 = numpy.array((ts - 1.e-10) // 1, numpy.int)
+        i0 = numpy.array(numpy.clip(numpy.floor((nt - 1)*ts), 0, nt-2), numpy.int)
         i1 = i0 + 1
-        xi = ts - i0
+        xi = (nt - 1)*ts - i0
         p0 = pts[i0, 0] * numpy.pi/180.
         p1 = pts[i1, 0] * numpy.pi/180.
         return  p0  + xi*(p1 - p0)
 
     def theFunc(ts):
-        i0 = numpy.array((ts - 1.e-10) // 1, numpy.int)
+        i0 = numpy.array(numpy.clip(numpy.floor((nt - 1)*ts), 0, nt-2), numpy.int)
         i1 = i0 + 1
-        xi = ts - i0
+        xi = (nt - 1)*ts - i0
         p0 = pts[i0, 1] * numpy.pi/180.
         p1 = pts[i1, 1] * numpy.pi/180.
         return  p0  + xi*(p1 - p0)        
