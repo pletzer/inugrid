@@ -59,20 +59,21 @@ grid.GetCellData().SetActiveVectors("2-form")
 #    print i, vecData.GetTuple(i)
 arrowSource = vtk.vtkArrowSource()
 
+cellCenters = vtk.vtkCellCenters()
+cellCenters.SetVertexCells(1)
+cellCenters.SetInputData(grid)
+
 glyph = vtk.vtkGlyph3D()
-glyph.SetSourceConnection(arrowSource.GetOutputPort())
-#glyph.SetScaleModeToScaleByVector()
 glyph.SetVectorModeToUseVector()
+glyph.SetScaleModeToScaleByVector()
+glyph.SetSourceConnection(arrowSource.GetOutputPort())
+glyph.SetInputConnection(cellCenters.GetOutputPort())
 glyph.SetScaleFactor(0.1)
-glyph.OrientOn()
-glyph.SetInputData(grid)
 glyph.Update()
-print glyph
 
 glyphMapper = vtk.vtkPolyDataMapper()
 glyphMapper.SetInputConnection(glyph.GetOutputPort())
-glyphMapper.Update()
-print glyphMapper
+
 glyphActor = vtk.vtkActor()
 glyphActor.SetMapper(glyphMapper)
 actors.append(glyphActor)
