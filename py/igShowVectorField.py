@@ -3,6 +3,7 @@ import vtk
 import numpy
 from igDivFilter import DivFilter
 from igLandOcean import LandOcean
+from igPiecewiseLinearLine import PiecewiseLinearLine
 
 """
 Compute closed line integral of d * d phi with 
@@ -32,6 +33,9 @@ def getIntegral(xa, xb, ya, yb):
     return psi(xb, yb) - psi(xa, ya)
 
 n = 10
+
+actors = []
+
 cs = igCubedSphere.CubedSphere(n)
 grid = cs.getUnstructuredGrid()
 
@@ -43,12 +47,12 @@ grid.GetCellData().RemoveArray('cell_areas')
 grid.GetCellData().RemoveArray('integral_star_d_phi_over_area')
 grid.GetCellData().RemoveArray('1-form')
 grid.GetPointData().RemoveArray('2-form-approx')
-cs.save('t.vtk')
+##cs.save('t.vtk')
 #cs.show()
 
 # add a nive background
 pnt = LandOcean(textureFile="2k_earth_daymap.jpeg", radius=0.99)
-actors = pnt.actors
+##actors.append(pnt.actors)
 
 # show vector field 
 #grid.GetCellData()
@@ -76,7 +80,27 @@ glyphMapper.SetInputConnection(glyph.GetOutputPort())
 
 glyphActor = vtk.vtkActor()
 glyphActor.SetMapper(glyphMapper)
-actors.append(glyphActor)
+##actors.append(glyphActor)
+
+# line
+nt = 6
+def lamFunc(ts):
+	return -numpy.pi + ts*2*numpy.pi
+
+def latFunc(ts):
+	return -60.*numpy.ones((nt,), numpy.float64)
+
+line = PiecewiseLinearLine(lamFunc, latFunc, nt=nt, radius=1.01)
+lineMapper = vtk.vtkDataSetMapper()
+lineMapper.SetInputData(line.grid)
+lineMapper.Update()
+lineActor = vtk.vtkActor()
+lineActor.SetMapper(lineMapper)
+lineActor.GetProperty().SetColor(1, 0, 0)
+#lineActor.GetProperty().RenderLinesAsTubesOn()
+print lineActor.GetProperty()
+actors.append(lineActor)
+
 
 ren = vtk.vtkRenderer()
 renWin = vtk.vtkRenderWindow()
