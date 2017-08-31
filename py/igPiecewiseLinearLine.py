@@ -13,10 +13,14 @@ class PiecewiseLinearLine:
         self.pts = vtk.vtkPoints()
         self.line = vtk.vtkPolyLine()
         self.grid = vtk.vtkUnstructuredGrid()
+        self.poly = vtk.vtkPolyData()
+        self.cells = vtk.vtkCellArray()
+
 
         ts = numpy.linspace(0., 1., nt)
         lams = lambdaFunction(ts)
         thes = thetaFunction(ts)
+        print '**** thes = ', thes, ' numpy.cos(thes) = ', numpy.cos(thes), ' numpy.sin(thes) = ', numpy.sin(thes)
         xs = radius * numpy.cos(thes) * numpy.cos(lams)
         ys = radius * numpy.cos(thes) * numpy.sin(lams)
         zs = radius * numpy.sin(thes)
@@ -41,6 +45,11 @@ class PiecewiseLinearLine:
         self.grid.Allocate(1, 1)
         # one cell
         self.grid.InsertNextCell(self.line.GetCellType(), ptIds)
+
+        self.cells.InsertNextCell(self.line)
+
+        self.poly.SetPoints(self.pts)
+        self.poly.SetLines(self.cells)
 
 
     def save(self, filename):

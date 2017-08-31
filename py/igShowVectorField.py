@@ -52,7 +52,7 @@ grid.GetPointData().RemoveArray('2-form-approx')
 
 # add a nive background
 pnt = LandOcean(textureFile="2k_earth_daymap.jpeg", radius=0.99)
-##actors.append(pnt.actors)
+actors = pnt.actors
 
 # show vector field 
 #grid.GetCellData()
@@ -80,7 +80,7 @@ glyphMapper.SetInputConnection(glyph.GetOutputPort())
 
 glyphActor = vtk.vtkActor()
 glyphActor.SetMapper(glyphMapper)
-##actors.append(glyphActor)
+actors.append(glyphActor)
 
 # line
 nt = 6
@@ -88,19 +88,22 @@ def lamFunc(ts):
 	return -numpy.pi + ts*2*numpy.pi
 
 def latFunc(ts):
-	return -60.*numpy.ones((nt,), numpy.float64)
+	return -60.*(numpy.pi/180.)*numpy.ones((nt,), numpy.float64)
 
-line = PiecewiseLinearLine(lamFunc, latFunc, nt=nt, radius=1.01)
-lineMapper = vtk.vtkDataSetMapper()
-lineMapper.SetInputData(line.grid)
+
+line = PiecewiseLinearLine(lamFunc, latFunc, nt=nt, radius=1.05)
+
+tubes = vtk.vtkTubeFilter()
+tubes.SetRadius(0.05)
+tubes.SetInputData(line.poly)
+
+lineMapper = vtk.vtkPolyDataMapper()
+lineMapper.SetInputConnection(tubes.GetOutputPort())
 lineMapper.Update()
 lineActor = vtk.vtkActor()
 lineActor.SetMapper(lineMapper)
 lineActor.GetProperty().SetColor(1, 0, 0)
-#lineActor.GetProperty().RenderLinesAsTubesOn()
-print lineActor.GetProperty()
 actors.append(lineActor)
-
 
 ren = vtk.vtkRenderer()
 renWin = vtk.vtkRenderWindow()
