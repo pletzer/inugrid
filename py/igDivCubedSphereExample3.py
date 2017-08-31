@@ -30,7 +30,7 @@ def getIntegral(xa, xb, ya, yb):
     """
     return psi(xb, yb) - psi(xa, ya)
 
-n = 20
+n = 10
 cs = igCubedSphere.CubedSphere(n)
 grid = cs.getUnstructuredGrid()
 

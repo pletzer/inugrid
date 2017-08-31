@@ -39,7 +39,11 @@ fltr = DivFilter(grid)
 fltr.applyIntegrals(getIntegral)
 
 # save/show
-cs.save('divCubedSphere3.vtk')
+grid.GetCellData().RemoveArray('cell_areas')
+grid.GetCellData().RemoveArray('integral_star_d_phi_over_area')
+grid.GetCellData().RemoveArray('1-form')
+grid.GetPointData().RemoveArray('2-form-approx')
+cs.save('t.vtk')
 #cs.show()
 
 # add a nive background
@@ -47,8 +51,9 @@ pnt = LandOcean(textureFile="2k_earth_daymap.jpeg", radius=0.99)
 actors = pnt.actors
 
 # show vector field 
+#grid.GetCellData()
 grid.GetCellData().SetActiveVectors("2-form")
-vecData = grid.GetCellData().GetVectors("2-form")
+#vecData = grid.GetCellData().GetVectors("2-form")
 #print vecData
 #for i in range(vecData.GetNumberOfTuples()):
 #    print i, vecData.GetTuple(i)
@@ -56,7 +61,7 @@ arrowSource = vtk.vtkArrowSource()
 
 glyph = vtk.vtkGlyph3D()
 glyph.SetSourceConnection(arrowSource.GetOutputPort())
-glyph.SetScaleModeToScaleByVector()
+#glyph.SetScaleModeToScaleByVector()
 glyph.SetVectorModeToUseVector()
 glyph.SetScaleFactor(0.1)
 glyph.OrientOn()
@@ -66,6 +71,8 @@ print glyph
 
 glyphMapper = vtk.vtkPolyDataMapper()
 glyphMapper.SetInputConnection(glyph.GetOutputPort())
+glyphMapper.Update()
+print glyphMapper
 glyphActor = vtk.vtkActor()
 glyphActor.SetMapper(glyphMapper)
 actors.append(glyphActor)
