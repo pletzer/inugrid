@@ -32,11 +32,11 @@ def getIntegral(xa, xb, ya, yb):
     """
     return psi(xb, yb) - psi(xa, ya)
 
-n = 40
+n = 50
 
 actors = []
 
-cs = igCubedSphere.CubedSphere(n, radius=1.02)
+cs = igCubedSphere.CubedSphere(n, radius=1.01)
 grid = cs.getUnstructuredGrid()
 
 fltr = DivFilter(grid)
@@ -58,7 +58,8 @@ actors = pnt.actors
 grid.GetCellData().SetActiveVectors("2-form")
 arrowSource = vtk.vtkConeSource()
 arrowSource.SetRadius(0.05)
-arrowSource.SetHeight(0.2)
+arrowSource.SetHeight(0.3)
+arrowSource.SetResolution(8)
 
 cellCenters = vtk.vtkCellCenters()
 cellCenters.SetVertexCells(1)
@@ -77,7 +78,7 @@ glyphMapper.SetInputConnection(glyph.GetOutputPort())
 
 glyphActor = vtk.vtkActor()
 glyphActor.SetMapper(glyphMapper)
-glyphActor.GetProperty().SetColor(0.2, 1.0, 0.2) #(218./255., 165./255., 32./255.)
+#glyphActor.GetProperty().SetColor(0.2, 1.0, 0.2) #(218./255., 165./255., 32./255.)
 actors.append(glyphActor)
 
 # line
