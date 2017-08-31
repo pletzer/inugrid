@@ -32,11 +32,11 @@ def getIntegral(xa, xb, ya, yb):
     """
     return psi(xb, yb) - psi(xa, ya)
 
-n = 10
+n = 40
 
 actors = []
 
-cs = igCubedSphere.CubedSphere(n)
+cs = igCubedSphere.CubedSphere(n, radius=1.02)
 grid = cs.getUnstructuredGrid()
 
 fltr = DivFilter(grid)
@@ -55,13 +55,10 @@ pnt = LandOcean(textureFile="2k_earth_daymap.jpeg", radius=0.99)
 actors = pnt.actors
 
 # show vector field 
-#grid.GetCellData()
 grid.GetCellData().SetActiveVectors("2-form")
-#vecData = grid.GetCellData().GetVectors("2-form")
-#print vecData
-#for i in range(vecData.GetNumberOfTuples()):
-#    print i, vecData.GetTuple(i)
-arrowSource = vtk.vtkArrowSource()
+arrowSource = vtk.vtkConeSource()
+arrowSource.SetRadius(0.05)
+arrowSource.SetHeight(0.2)
 
 cellCenters = vtk.vtkCellCenters()
 cellCenters.SetVertexCells(1)
@@ -72,7 +69,7 @@ glyph.SetVectorModeToUseVector()
 glyph.SetScaleModeToScaleByVector()
 glyph.SetSourceConnection(arrowSource.GetOutputPort())
 glyph.SetInputConnection(cellCenters.GetOutputPort())
-glyph.SetScaleFactor(0.1)
+glyph.SetScaleFactor(0.8)
 glyph.Update()
 
 glyphMapper = vtk.vtkPolyDataMapper()
@@ -80,21 +77,23 @@ glyphMapper.SetInputConnection(glyph.GetOutputPort())
 
 glyphActor = vtk.vtkActor()
 glyphActor.SetMapper(glyphMapper)
+glyphActor.GetProperty().SetColor(0.2, 1.0, 0.2) #(218./255., 165./255., 32./255.)
 actors.append(glyphActor)
 
 # line
-nt = 6
+nt = 8
 def lamFunc(ts):
 	return -numpy.pi + ts*2*numpy.pi
 
 def latFunc(ts):
-	return -60.*(numpy.pi/180.)*numpy.ones((nt,), numpy.float64)
+	return -50.*(numpy.pi/180.)*numpy.ones((nt,), numpy.float64)
 
 
-line = PiecewiseLinearLine(lamFunc, latFunc, nt=nt, radius=1.05)
+line = PiecewiseLinearLine(lamFunc, latFunc, nt=nt, radius=1.04)
 
-tubes = vtk.vtkTubeFilter()
-tubes.SetRadius(0.05)
+tubes = vtk.vtkRibbonFilter()
+tubes.SetWidth(0.10)
+tubes.SetAngle(90.0)
 tubes.SetInputData(line.poly)
 
 lineMapper = vtk.vtkPolyDataMapper()
@@ -102,18 +101,36 @@ lineMapper.SetInputConnection(tubes.GetOutputPort())
 lineMapper.Update()
 lineActor = vtk.vtkActor()
 lineActor.SetMapper(lineMapper)
-lineActor.GetProperty().SetColor(1, 0, 0)
+lineActor.GetProperty().SetSpecular(1.0)
+lineActor.GetProperty().SetColor(0.5, 0.08, 0)
+lineActor.GetProperty().SetInterpolationToPhong()
 actors.append(lineActor)
+
+lights = []
+
+light1 = vtk.vtkLight()
+light1.SetPosition(2., 2., 1.)
+light1.SetFocalPoint(0., 0., 0.)
+light1.SetIntensity(1.0)
+#lights.append(light1)
+
+light2 = vtk.vtkLight()
+light2.SetPosition((0., 0., -2.))
+light2.SetFocalPoint((0., 0., 0.))
+light2.SetIntensity(10)
+#lights.append(light2)
 
 ren = vtk.vtkRenderer()
 renWin = vtk.vtkRenderWindow()
 iren = vtk.vtkRenderWindowInteractor()
 renWin.AddRenderer(ren)
 iren.SetRenderWindow(renWin)
+for el in lights:
+	ren.AddLight(el)
 for a in actors:
     ren.AddActor(a)
 
-ren.SetBackground(0.5, 0.5, 0.5)
+ren.SetBackground(1, 1, 1)
 renWin.SetSize(900, 600)
 iren.Initialize()
 renWin.Render()

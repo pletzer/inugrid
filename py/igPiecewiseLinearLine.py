@@ -20,7 +20,6 @@ class PiecewiseLinearLine:
         ts = numpy.linspace(0., 1., nt)
         lams = lambdaFunction(ts)
         thes = thetaFunction(ts)
-        print '**** thes = ', thes, ' numpy.cos(thes) = ', numpy.cos(thes), ' numpy.sin(thes) = ', numpy.sin(thes)
         xs = radius * numpy.cos(thes) * numpy.cos(lams)
         ys = radius * numpy.cos(thes) * numpy.sin(lams)
         zs = radius * numpy.sin(thes)
