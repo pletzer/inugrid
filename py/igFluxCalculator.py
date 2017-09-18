@@ -144,6 +144,8 @@ class FluxCalculator:
                 totalT += tEnd - tBeg
                 currentTEnd = tBeg
 
+	print('*** totalT = {}'.format(totalT))
+        print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
         assert abs(totalT - 1.0) < eps
         
         return totalFlux
@@ -295,13 +297,13 @@ def testOpenSmall2():
     print('testOpenSmall: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
-    assert abs(totFlux - exact) < 1.e-10
+    assert abs(totFlux - exact) < 1.e-6 # 1.e-10
 
 def testOpenSmall3():
     from igLatLon import LatLon
 
     # create grid
-    nlat, nlon = 2, 4
+    nlat, nlon = 8, 16
     coord = LatLon(numLats=nlat, numLons=nlon)
     grd = coord.getUnstructuredGrid()
 
@@ -322,7 +324,7 @@ def testOpenSmall3():
     assert abs(totFlux - exact) < 1.e-10
 
 if __name__ == '__main__':
-    testOpenSmall()
+    #testOpenSmall()
     #testOpenSmall2()
-    #testOpenSmall3()
+    testOpenSmall3()
     #testClosed()
