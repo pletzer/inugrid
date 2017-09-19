@@ -10,6 +10,10 @@ class FluxCalculator:
     Class to compute flux across a segmented line
     """
 
+    # to handle floating point comparisons
+    EPS = 1.2323435e-14
+
+
     def __init__(self, grid, integralFunction):
         """
         Constructor
@@ -41,6 +45,14 @@ class FluxCalculator:
             lam, the = lamThes[i, :]
             self.xyzLine[i, :] = self._getXYZFromLambdaTheta(lam, the)
 
+        # compute the total distance
+        self.lineDistance = 0.0
+        for i in range(n-1):
+        	p0 = self.xyzLine[i, :]
+        	p1 = self.xyzLine[i + 1, :]
+        	dp = p1 - p0
+        	self.lineDistance += numpy.sqrt(numpy.dot(dp, dp))
+
     def computeFlux(self):
         """
         Compute the flux
@@ -48,6 +60,8 @@ class FluxCalculator:
         """
 
         self.totalFlux = 0.0
+        if self.lineDistance < self.EPS:
+        	return 0.0
 
         tBeg = vtk.mutable(-1.)
         tEnd = vtk.mutable(-1.)
@@ -133,20 +147,18 @@ class FluxCalculator:
         @return total flux
         """
 
-        eps = 1.2323435e-14
-
         totalFlux = 0.0
         totalT = 0.0
         currentTEnd = -float('inf')
         for tBeg, tEnd in sorted(lineSubsegment2Flux):
-            if tBeg > currentTEnd - eps:
+            if tBeg > currentTEnd - self.EPS:
                 totalFlux += lineSubsegment2Flux[tBeg, tEnd]
                 totalT += tEnd - tBeg
                 currentTEnd = tBeg
 
 	print('*** totalT = {}'.format(totalT))
         print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
-        assert abs(totalT - 1.0) < eps
+        assert abs(totalT - 1.0) < self.EPS
         
         return totalFlux
 
@@ -294,7 +306,7 @@ def testOpenSmall2():
 
     totFlux = fc.computeFlux()
     exact = psi(lamB, theB) - psi(lamA, theA)
-    print('testOpenSmall: total flux = {} exact = {}'.format(totFlux, exact))
+    print('testOpenSmall2: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
     assert abs(totFlux - exact) < 1.e-6 # 1.e-10
@@ -312,19 +324,44 @@ def testOpenSmall3():
 
     piHalf = 0.5*math.pi
     lamA, theA = piHalf*0.2, piHalf*0.5
-    lamB, theB = piHalf*0.8, piHalf*0.5
+    lamB, theB = piHalf*0.2, piHalf*0.5 # piHalf*0.8, piHalf*0.5
     line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
     fc.setLine(line)
 
     totFlux = fc.computeFlux()
     exact = psi(lamB, theB) - psi(lamA, theA)
-    print('testOpenSmall: total flux = {} exact = {}'.format(totFlux, exact))
+    print('testOpenSmall3: total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    assert abs(totFlux - exact) < 1.e-10
+
+def testZero():
+    from igLatLon import LatLon
+
+    # create grid
+    nlat, nlon = 8, 16
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    piHalf = 0.5*math.pi
+    lamA, theA = piHalf*0.2, piHalf*0.5
+    lamB, theB = piHalf*0.2, piHalf*0.5 # piHalf*0.8, piHalf*0.5
+    line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('testZero: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
     assert abs(totFlux - exact) < 1.e-10
 
 if __name__ == '__main__':
+    #testClosed()
     #testOpenSmall()
     #testOpenSmall2()
-    testOpenSmall3()
-    #testClosed()
+    testZero()
+    #testOpenSmall3()
