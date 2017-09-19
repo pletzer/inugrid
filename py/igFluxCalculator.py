@@ -159,9 +159,9 @@ class FluxCalculator:
                 totalT += tEnd - tBeg
                 currentTEnd = tBeg
 
-        #print('*** totalT = {}'.format(totalT))
-        #print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
-        assert abs(totalT - 1.0) < self.EPS
+        print('*** totalT = {} 1 - totalT = {}'.format(totalT, 1.0 - totalT))
+        print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
+        assert abs(1.0 - totalT) < 100*self.EPS
         
         return totalFlux
 
