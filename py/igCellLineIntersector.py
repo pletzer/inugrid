@@ -10,7 +10,7 @@ class CellLineIntersector:
         """
         Constructor
         """
-        # intersecvtions are computed in 3d between lines and faces, so need 
+        # intersections are computed in 3d between lines and faces, so need 
         # to create a 3d hexahedron
         self.cell = vtk.vtkHexahedron()
         self.pts = self.cell.GetPoints()
@@ -81,6 +81,11 @@ class CellLineIntersector:
         @return True if an intersection was found
         """
 
+        tStart.set(0.0)
+        tEnd.set(1.0)
+
+        # parametric position
+        tprime = vtk.mutable(-1.0)
         # not used
         subId = vtk.mutable(0)
         # not used
@@ -118,7 +123,9 @@ class CellLineIntersector:
             tEnd.set(1.0)
             xiEnd[:] = self.xi[:2]
         else:
-            res2 = self.cell.IntersectWithLine(pA, pB, self.tol, tEnd, self.intersectPt, self.xi, subId)
+            res2 = self.cell.IntersectWithLine(pA, pB, self.tol, tprime, self.intersectPt, self.xi, subId)
+            # correct the parametric coordinate to account for moving pA to the previous intersection
+            tEnd.set(tStart.get() + (1. - tStart.get())*tprime.get())
             if res2:
                 self.cell.EvaluatePosition(self.intersectPt, self.closestPoint, subId, self.xi, dist, self.weights)
                 xiEnd[:] = self.xi[:2]
@@ -245,7 +252,7 @@ def testOutside():
 
 def testTangent():
 
-    # segment is fully outside of the cell
+    # segment is tangent to cell
 
     tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
@@ -271,6 +278,39 @@ def testTangent():
     found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     print('testTangent: xiBeg = {} xiEnd = {}'.format(xiBeg, xiEnd))
 
+def testTangent2():
+
+    # segment is tangent to cell
+
+    tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
+
+    piHalf = numpy.pi/2.
+
+    # cell
+    lam0, the0 = 0.25*piHalf, 0.5*piHalf
+    lam1, the1 = 0.50*piHalf, 0.5*piHalf
+    lam2, the2 = 0.50*piHalf, 1.0*piHalf
+    lam3, the3 = 0.25*piHalf, 1.0*piHalf
+
+    lamA, theA = 0.2*piHalf, 0.5*piHalf
+    lamB, theB = 0.7*piHalf, 0.5*piHalf
+
+    cli = CellLineIntersector()
+    cli.setCell(lam0, the0,
+                lam1, the1, 
+                lam2, the2, 
+                lam3, the3)
+    cli.setLine(lamA, theA,
+                lamB, theB)
+
+    xiBeg = numpy.zeros((2,), numpy.float64)
+    xiEnd = numpy.zeros((2,), numpy.float64)
+
+    found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
+    print('testTangent2: tBeg = {} tEnd = {} xiBeg = {} xiEnd = {}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd))
+    assert abs(tBeg.get() - 0.1) < 1.e-10
+    assert abs(tEnd.get() - 0.6) < 1.e-10
+
 
 if __name__ == '__main__':
     testEasy()
@@ -278,5 +318,6 @@ if __name__ == '__main__':
     testInside()
     testOutside()
     testTangent()
+    testTangent2()
 
 

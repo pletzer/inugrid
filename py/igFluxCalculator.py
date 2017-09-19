@@ -63,10 +63,13 @@ class FluxCalculator:
         if self.lineDistance < self.EPS:
         	return 0.0
 
+        # line parametric coordinates, will be filled in by 
+        # the line-cell intersector
         tBeg = vtk.mutable(-1.)
         tEnd = vtk.mutable(-1.)
 
-        # parametric strat end points in the cell
+        # parametric start/end points in the cell
+        # these will be filled in by the intersector
         xiBeg = numpy.zeros((2,), numpy.float64) # 2D
         xiEnd = numpy.zeros((2,), numpy.float64) # 2D
 
@@ -105,7 +108,7 @@ class FluxCalculator:
 
                 intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
-                # compute xiBeg and xiEnd
+                # compute tBeg, tEnd, xiBeg and xiEnd
                 isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
                 if isIntersecting:
 
@@ -156,8 +159,8 @@ class FluxCalculator:
                 totalT += tEnd - tBeg
                 currentTEnd = tBeg
 
-	print('*** totalT = {}'.format(totalT))
-        print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
+        #print('*** totalT = {}'.format(totalT))
+        #print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
         assert abs(totalT - 1.0) < self.EPS
         
         return totalFlux
@@ -323,8 +326,8 @@ def testOpenSmall3():
     fc = FluxCalculator(grd, edgeIntegral)
 
     piHalf = 0.5*math.pi
-    lamA, theA = piHalf*0.2, piHalf*0.5
-    lamB, theB = piHalf*0.2, piHalf*0.5 # piHalf*0.8, piHalf*0.5
+    lamA, theA = piHalf*0.2, piHalf*0.5 #piHalf*0.2, piHalf*0.5
+    lamB, theB = piHalf*0.7, piHalf*0.5 # piHalf*0.8, piHalf*0.5
     line = numpy.array([(lamA, theA), (lamB, theB)], numpy.float64).reshape(2, 2)
     fc.setLine(line)
 
@@ -333,7 +336,7 @@ def testOpenSmall3():
     print('testOpenSmall3: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
-    assert abs(totFlux - exact) < 1.e-10
+    assert abs(totFlux - exact) < 0.02
 
 def testZero():
     from igLatLon import LatLon
@@ -360,8 +363,8 @@ def testZero():
     assert abs(totFlux - exact) < 1.e-10
 
 if __name__ == '__main__':
-    #testClosed()
-    #testOpenSmall()
-    #testOpenSmall2()
+    testClosed()
+    testOpenSmall()
+    testOpenSmall2()
     testZero()
-    #testOpenSmall3()
+    testOpenSmall3()
