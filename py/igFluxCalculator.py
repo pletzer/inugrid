@@ -159,9 +159,13 @@ class FluxCalculator:
                 totalT += tEnd - tBeg
                 currentTEnd = tBeg
 
-        print('*** totalT = {} 1 - totalT = {}'.format(totalT, 1.0 - totalT))
-        print('*** lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
-        assert abs(1.0 - totalT) < 100*self.EPS
+        try:
+        	assert abs(1.0 - totalT) < 100*self.EPS
+        except:
+        	print('ERROR the integrated parametric coordinate "t" amounts to {}, which is != 1'.format(totalT))
+        	print('      This indicates that some segements are not properly accounted for.')
+        	print('      lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
+        	raise RuntimeError, 'FATAL'
         
         return totalFlux
 
