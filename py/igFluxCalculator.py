@@ -372,10 +372,34 @@ def testOpenSmall3TwoSegments():
     print('testOpenSmall3TwoSegments: total flux = {} exact = {}'.format(totFlux, exact))
 
     # check
-    try:
-        assert abs(totFlux - exact) < 0.02
-    except:
-        print fc.lineSubsegment2Flux
+    assert abs(totFlux - exact) < 0.02
+
+def testOpenSmall3ThreeSegments():
+    from igLatLon import LatLon
+
+    # create grid
+    nlat, nlon = 8, 16
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    piHalf = 0.5*math.pi
+    lamA, theA = piHalf*0.2, piHalf*0.5
+    lamB, theB = piHalf*0.21, piHalf*0.5
+    lamC, theC = piHalf*0.6, piHalf*0.5
+    lamD, theD = piHalf*0.7, piHalf*0.5
+    line = numpy.array([(lamA, theA), (lamB, theB), (lamC, theC), (lamD, theD)], numpy.float64).reshape(4, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamD, theD) - psi(lamA, theA)
+    print('testOpenSmall3ThreeSegments: total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    assert abs(totFlux - exact) < 0.02
+
 
 def testZero():
     from igLatLon import LatLon
@@ -408,3 +432,4 @@ if __name__ == '__main__':
     testZero()
     testOpenSmall3()
     testOpenSmall3TwoSegments()
+    testOpenSmall3ThreeSegments()
