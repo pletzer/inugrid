@@ -78,6 +78,7 @@ class FluxCalculator:
 
         # number of segments
         nSegs = self.xyzLine.shape[0] - 1
+        self.polyline2Flux = []
 
         # iterate over the segments of the line
     	for iSeg in range(nSegs):
@@ -90,7 +91,7 @@ class FluxCalculator:
             intersector.setLine(lamA, theA, lamB, theB)
 
             # (tBeg, tEnd): flux
-            self.lineSubsegment2Flux = {}
+            segment2Flux = {}
 
             # iterate over the grid cells that are (likely) intersected by the line segment
             # xyzA -> xyzB
@@ -135,9 +136,11 @@ class FluxCalculator:
 
                     # this prevents sub segments to assign duplicate fluxes to different 
                     # cells when both tBeg and tEnd are the same
-                    self.lineSubsegment2Flux[tBeg.get(), tEnd.get()] = flux
+                    segment2Flux[tBeg.get(), tEnd.get()] = flux
 
-            self.totalFlux = self._addFluxes()
+            self.polyline2Flux.append(segment2Flux)
+
+        self.totalFlux = self._addFluxes()
 
         return self.totalFlux
 
@@ -147,23 +150,29 @@ class FluxCalculator:
         Add the fluxes, taking care of duplicates
         @return total flux
         """
-
         totalFlux = 0.0
-        totalT = 0.0
-        currentTEnd = -float('inf')
-        for tBeg, tEnd in sorted(self.lineSubsegment2Flux):
-            if tBeg > currentTEnd - self.EPS:
-                totalFlux += self.lineSubsegment2Flux[tBeg, tEnd]
-                totalT += tEnd - tBeg
-                currentTEnd = tBeg
+        iSeg = 0
+        for segment2Flux in self.polyline2Flux:
+            # the starting and ending parametric coordinates of the 
+            # segment always start from 0 and should finish at 1.0
+            totalT = 0.0
+            currentTEnd = -float('inf')
+            # sort the keys
+            tBegEnd = sorted(segment2Flux)
+            for tBeg, tEnd in tBegEnd:
+                if tBeg > currentTEnd - self.EPS:
+                    totalFlux += segment2Flux[tBeg, tEnd]
+                    totalT += tEnd - tBeg
+                    currentTEnd = tBeg
 
-        try:
-        	assert abs(1.0 - totalT) < 100*self.EPS
-        except:
-        	print('ERROR the integrated parametric coordinate "t" amounts to {}, which is != 1'.format(totalT))
-        	print('      This indicates that some segements are not properly accounted for.')
-        	print('      lineSubsegment2Flux = {}'.format(self.lineSubsegment2Flux))
-        	raise RuntimeError, 'FATAL'
+            try:
+        	   assert abs(1.0 - totalT) < 100*self.EPS
+            except:
+        	   print('ERROR the integrated parametric coordinate "t" for segment {} amounts to {} != 1'.format(iSeg, totalT))
+        	   print('      This indicates that some segments are not properly accounted for.')
+        	   print('      subsegment2Flux = {}'.format(subsegment2Flux))
+        	   raise RuntimeError, 'FATAL'
+            iSeg += 1
         
         return totalFlux
 
@@ -353,7 +362,7 @@ def testOpenSmall3TwoSegments():
 
     piHalf = 0.5*math.pi
     lamA, theA = piHalf*0.2, piHalf*0.5
-    lamB, theB = piHalf*0.6, piHalf*0.5
+    lamB, theB = piHalf*0.21, piHalf*0.5
     lamC, theC = piHalf*0.7, piHalf*0.5
     line = numpy.array([(lamA, theA), (lamB, theB), (lamC, theC)], numpy.float64).reshape(3, 2)
     fc.setLine(line)
