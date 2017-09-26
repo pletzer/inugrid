@@ -170,7 +170,7 @@ class FluxCalculator:
             except:
         	   print('ERROR the integrated parametric coordinate "t" for segment {} amounts to {} != 1'.format(iSeg, totalT))
         	   print('      This indicates that some segments are not properly accounted for.')
-        	   print('      subsegment2Flux = {}'.format(subsegment2Flux))
+        	   print('      segment2Flux = {}'.format(segment2Flux))
         	   raise RuntimeError, 'FATAL'
             iSeg += 1
         
