@@ -90,7 +90,7 @@ class FluxCalculator:
             intersector.setLine(lamA, theA, lamB, theB)
 
             # (tBeg, tEnd): flux
-            lineSubsegment2Flux = {}
+            self.lineSubsegment2Flux = {}
 
             # iterate over the grid cells that are (likely) intersected by the line segment
             # xyzA -> xyzB
@@ -135,27 +135,25 @@ class FluxCalculator:
 
                     # this prevents sub segments to assign duplicate fluxes to different 
                     # cells when both tBeg and tEnd are the same
-                    lineSubsegment2Flux[tBeg.get(), tEnd.get()] = flux
+                    self.lineSubsegment2Flux[tBeg.get(), tEnd.get()] = flux
 
-            self.totalFlux = self._addFluxes(lineSubsegment2Flux)
+            self.totalFlux = self._addFluxes()
 
         return self.totalFlux
 
 
-    def _addFluxes(self, lineSubsegment2Flux):
+    def _addFluxes(self):
         """
         Add the fluxes, taking care of duplicates
-        @param lineSubsegment2Flux dictionary whose keys are the start/end param coords and the values
-                are the flux integrals
         @return total flux
         """
 
         totalFlux = 0.0
         totalT = 0.0
         currentTEnd = -float('inf')
-        for tBeg, tEnd in sorted(lineSubsegment2Flux):
+        for tBeg, tEnd in sorted(self.lineSubsegment2Flux):
             if tBeg > currentTEnd - self.EPS:
-                totalFlux += lineSubsegment2Flux[tBeg, tEnd]
+                totalFlux += self.lineSubsegment2Flux[tBeg, tEnd]
                 totalT += tEnd - tBeg
                 currentTEnd = tBeg
 
@@ -164,7 +162,7 @@ class FluxCalculator:
         except:
         	print('ERROR the integrated parametric coordinate "t" amounts to {}, which is != 1'.format(totalT))
         	print('      This indicates that some segements are not properly accounted for.')
-        	print('      lineSubsegment2Flux = {}'.format(lineSubsegment2Flux))
+        	print('      lineSubsegment2Flux = {}'.format(self.lineSubsegment2Flux))
         	raise RuntimeError, 'FATAL'
         
         return totalFlux
@@ -342,6 +340,34 @@ def testOpenSmall3():
     # check
     assert abs(totFlux - exact) < 0.02
 
+def testOpenSmall3TwoSegments():
+    from igLatLon import LatLon
+
+    # create grid
+    nlat, nlon = 8, 16
+    coord = LatLon(numLats=nlat, numLons=nlon)
+    grd = coord.getUnstructuredGrid()
+
+    # compute flux
+    fc = FluxCalculator(grd, edgeIntegral)
+
+    piHalf = 0.5*math.pi
+    lamA, theA = piHalf*0.2, piHalf*0.5
+    lamB, theB = piHalf*0.6, piHalf*0.5
+    lamC, theC = piHalf*0.7, piHalf*0.5
+    line = numpy.array([(lamA, theA), (lamB, theB), (lamC, theC)], numpy.float64).reshape(3, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+    exact = psi(lamC, theC) - psi(lamA, theA)
+    print('testOpenSmall3TwoSegments: total flux = {} exact = {}'.format(totFlux, exact))
+
+    # check
+    try:
+        assert abs(totFlux - exact) < 0.02
+    except:
+        print fc.lineSubsegment2Flux
+
 def testZero():
     from igLatLon import LatLon
 
@@ -372,3 +398,4 @@ if __name__ == '__main__':
     testOpenSmall2()
     testZero()
     testOpenSmall3()
+    testOpenSmall3TwoSegments()
