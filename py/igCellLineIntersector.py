@@ -3,13 +3,17 @@ import numpy
 
 class CellLineIntersector:
     """
-    Class that finds all the cells that are intersected by a line
+    Class that finds all the intersection points between a line and a cell
     """
 
-    def __init__(self,):
+    def __init__(self, radius= 1.0):
         """
         Constructor
+        @param radius radius of the earth 
         """
+
+        self.radius = radius
+
         # intersections are computed in 3d between lines and faces, so need 
         # to create a 3d hexahedron
         self.cell = vtk.vtkHexahedron()
@@ -42,8 +46,8 @@ class CellLineIntersector:
         @param lamB longitude of ending point
         @param theB latitude of ending point
         """
-        self.pA[:] = lamA, theA, 0.0
-        self.pB[:] = lamB, theB, 0.0
+        self.pA = self._getXYZ(lamA, theA)
+        self.pB = self._getXYZ(lamB, theB)
 
     def setCell(self, lam0, the0, lam1, the1, lam2, the2, lam3, the3):
         """
@@ -59,16 +63,16 @@ class CellLineIntersector:
         """
 
         # lower level
-        self.pts.InsertPoint(0, lam0, the0, -0.5)
-        self.pts.InsertPoint(1, lam1, the1, -0.5)
-        self.pts.InsertPoint(2, lam2, the2, -0.5)
-        self.pts.InsertPoint(3, lam3, the3, -0.5)
+        self.pts.InsertPoint(0, self._getXYZ(lam0, the0, -0.5))
+        self.pts.InsertPoint(1, self._getXYZ(lam1, the1, -0.5))
+        self.pts.InsertPoint(2, self._getXYZ(lam2, the2, -0.5))
+        self.pts.InsertPoint(3, self._getXYZ(lam3, the3, -0.5))
 
         # upper level
-        self.pts.InsertPoint(4, lam0, the0, 0.5)
-        self.pts.InsertPoint(5, lam1, the1, 0.5)
-        self.pts.InsertPoint(6, lam2, the2, 0.5)
-        self.pts.InsertPoint(7, lam3, the3, 0.5)
+        self.pts.InsertPoint(4, self._getXYZ(lam0, the0, 0.5))
+        self.pts.InsertPoint(5, self._getXYZ(lam1, the1, 0.5))
+        self.pts.InsertPoint(6, self._getXYZ(lam2, the2, 0.5))
+        self.pts.InsertPoint(7, self._getXYZ(lam3, the3, 0.5))
 
 
     def findIntersection(self, tStart, tEnd, xiBeg, xiEnd):
@@ -133,6 +137,20 @@ class CellLineIntersector:
         hasIntersection = (insideA == 1 or res1) and (insideB == 1 or res2)
         return hasIntersection
 
+    def _getXYZ(self, lam, the, elev=0.0):
+        """
+        Get the Cartesian coordinates from lon-lat
+        @param lam longitude in radian
+        @param the latitude in radian
+        @param elev elevation in normalized units
+        """
+        a = self.radius*(1.0 + elev)
+        cos_the = numpy.cos(the)
+        x = a*cos_the*numpy.cos(lam)
+        y = a*cos_the*numpy.sin(lam)
+        z = a*numpy.sin(the)
+        return numpy.array([x, y, z])
+
 ###############################################################################
 
 def testEasy():
@@ -142,12 +160,12 @@ def testEasy():
     tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
-    lam1, the1 = 1., 0.
-    lam2, the2 = 1., 1.
-    lam3, the3 = 0., 1.
+    lam1, the1 = 0.01, 0.
+    lam2, the2 = 0.01, 0.01
+    lam3, the3 = 0., 0.01
 
-    lamA, theA = -0.5, 0.5
-    lamB, theB = 0.5, 0.5
+    lamA, theA = -0.005, 0.005
+    lamB, theB = 0.005, 0.005
 
     cli = CellLineIntersector()
     cli.setCell(lam0, the0,
@@ -161,22 +179,22 @@ def testEasy():
     xiEnd = numpy.zeros((2,), numpy.float64)
 
     found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
-    assert abs(xiBeg[0] - 0.0) < 1.e-10 and abs(xiBeg[1] - 0.5) < 1.e-10
-    assert abs(xiEnd[0] - 0.5) < 1.e-10 and abs(xiEnd[1] - 0.5) < 1.e-10
+    assert abs(xiBeg[0] - 0.0) < 1.e-5 and abs(xiBeg[1] - 0.5) < 1.e-5
+    assert abs(xiEnd[0] - 0.5) < 1.e-5 and abs(xiEnd[1] - 0.5) < 1.e-5
 
 def test2Intersections():
 
-    # 2 intersection
+    # 2 intersections
 
     tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
-    lam1, the1 = 1., 0.
-    lam2, the2 = 1., 1.
-    lam3, the3 = 0., 1.
+    lam1, the1 = 0.01, 0.
+    lam2, the2 = 0.01, 0.01
+    lam3, the3 = 0., 0.01
 
-    lamA, theA = -0.5, 0.5
-    lamB, theB = 1.5, 0.5
+    lamA, theA = -0.005, 0.005
+    lamB, theB = 0.015, 0.005
 
     cli = CellLineIntersector()
     cli.setCell(lam0, the0,
@@ -190,8 +208,8 @@ def test2Intersections():
     xiEnd = numpy.zeros((2,), numpy.float64)
 
     found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
-    assert abs(xiBeg[0] - 0.0) < 1.e-10 and abs(xiBeg[1] - 0.5) < 1.e-10
-    assert abs(xiEnd[0] - 1.0) < 1.e-10 and abs(xiEnd[1] - 0.5) < 1.e-10
+    assert abs(xiBeg[0] - 0.0) < 1.e-4 and abs(xiBeg[1] - 0.5) < 1.e-4
+    assert abs(xiEnd[0] - 1.0) < 1.e-4 and abs(xiEnd[1] - 0.5) < 1.e-4
 
 def testInside():
 
@@ -200,12 +218,12 @@ def testInside():
     tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
-    lam1, the1 = 1., 0.
-    lam2, the2 = 1., 1.
-    lam3, the3 = 0., 1.
+    lam1, the1 = 0.01, 0.
+    lam2, the2 = 0.01, 0.01
+    lam3, the3 = 0., 0.01
 
-    lamA, theA = 0.1, 0.5
-    lamB, theB = 0.9, 0.5
+    lamA, theA = 0.001, 0.005
+    lamB, theB = 0.009, 0.005
 
     cli = CellLineIntersector()
     cli.setCell(lam0, the0,
@@ -219,8 +237,8 @@ def testInside():
     xiEnd = numpy.zeros((2,), numpy.float64)
 
     found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
-    assert abs(xiBeg[0] - 0.1) < 1.e-10 and abs(xiBeg[1] - 0.5) < 1.e-10
-    assert abs(xiEnd[0] - 0.9) < 1.e-10 and abs(xiEnd[1] - 0.5) < 1.e-10
+    assert abs(xiBeg[0] - 0.1) < 1.e-5 and abs(xiBeg[1] - 0.5) < 1.e-5
+    assert abs(xiEnd[0] - 0.9) < 1.e-5 and abs(xiEnd[1] - 0.5) < 1.e-5
 
 def testOutside():
 
@@ -229,12 +247,12 @@ def testOutside():
     tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
-    lam1, the1 = 1., 0.
-    lam2, the2 = 1., 1.
-    lam3, the3 = 0., 1.
+    lam1, the1 = 0.01, 0.
+    lam2, the2 = 0.01, 0.01
+    lam3, the3 = 0., 0.01
 
-    lamA, theA = -2.0, -0.5
-    lamB, theB = +3.0, -0.2
+    lamA, theA = -0.02, -0.005
+    lamB, theB = +0.03, -0.002
 
     cli = CellLineIntersector()
     cli.setCell(lam0, the0,
@@ -257,12 +275,12 @@ def testTangent():
     tBeg, tEnd = vtk.mutable(-1.0), vtk.mutable(-1.0)
 
     lam0, the0 = 0., 0.
-    lam1, the1 = 1., 0.
-    lam2, the2 = 1., 1.
-    lam3, the3 = 0., 1.
+    lam1, the1 = 0.01, 0.
+    lam2, the2 = 0.01, 0.01
+    lam3, the3 = 0., 0.01
 
-    lamA, theA = -2.0, -0.0
-    lamB, theB = +3.0, -0.0
+    lamA, theA = -0.02, -0.0
+    lamB, theB = +0.03, -0.0
 
     cli = CellLineIntersector()
     cli.setCell(lam0, the0,
@@ -287,13 +305,13 @@ def testTangent2():
     piHalf = numpy.pi/2.
 
     # cell
-    lam0, the0 = 0.25*piHalf, 0.5*piHalf
-    lam1, the1 = 0.50*piHalf, 0.5*piHalf
-    lam2, the2 = 0.50*piHalf, 1.0*piHalf
-    lam3, the3 = 0.25*piHalf, 1.0*piHalf
+    lam0, the0 = 0.025*piHalf, 0.05*piHalf
+    lam1, the1 = 0.050*piHalf, 0.05*piHalf
+    lam2, the2 = 0.050*piHalf, 0.1*piHalf
+    lam3, the3 = 0.025*piHalf, 0.1*piHalf
 
-    lamA, theA = 0.2*piHalf, 0.5*piHalf
-    lamB, theB = 0.7*piHalf, 0.5*piHalf
+    lamA, theA = 0.02*piHalf, 0.05*piHalf
+    lamB, theB = 0.07*piHalf, 0.05*piHalf
 
     cli = CellLineIntersector()
     cli.setCell(lam0, the0,
@@ -308,8 +326,8 @@ def testTangent2():
 
     found = cli.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
     print('testTangent2: tBeg = {} tEnd = {} xiBeg = {} xiEnd = {}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd))
-    assert abs(tBeg.get() - 0.1) < 1.e-10
-    assert abs(tEnd.get() - 0.6) < 1.e-10
+    assert abs(tBeg.get() - 0.1) < 1.e-3
+    assert abs(tEnd.get() - 0.6) < 1.e-3
 
 
 if __name__ == '__main__':
