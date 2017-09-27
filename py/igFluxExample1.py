@@ -47,4 +47,5 @@ fc.setLine(line)
 totFlux = fc.computeFlux()
 
 print('Total flux: {}'.format(totFlux))
+print('line 2 flux map: {}'.format(fc.polyline2Flux))
 
