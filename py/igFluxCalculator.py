@@ -89,6 +89,7 @@ class FluxCalculator:
             lamA, theA = self._getLambdaThetaFromXYZ(xyzA)
             lamB, theB = self._getLambdaThetaFromXYZ(xyzB)
             intersector.setLine(lamA, theA, lamB, theB)
+            #print '*** iSeg={} (lamA/pi, theA/pi)={} (lamB, theB)={}'.format(iSeg, (lamA/numpy.pi, theA/numpy.pi), (lamB/numpy.pi, theB/numpy.pi))
 
             # (tBeg, tEnd): flux
             segment2Flux = {}
@@ -106,12 +107,14 @@ class FluxCalculator:
                 lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
                 lam2, the2 = self._getLambdaThetaFromXYZ(xyz2)
                 lam3, the3 = self._getLambdaThetaFromXYZ(xyz3)
+                #print '\t--- cellId={} verts 0={} 1={} 2={} 3={}'.format(cellId, (lam0/numpy.pi, the0/numpy.pi), (lam1/numpy.pi, the1/numpy.pi), (lam2/numpy.pi, the2/numpy.pi), (lam3/numpy.pi, the3/numpy.pi),)
 
                 intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
                 # compute tBeg, tEnd, xiBeg and xiEnd
                 isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
                 if isIntersecting:
+                    #print '\t\t... found intersection tBeg={} tEnd={} xiBeg={} xiEnd={}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd)
 
                     basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
 
@@ -482,17 +485,17 @@ def testCubedSphere2():
 def testCubedSphere3():
     from igCubedSphere import CubedSphere
 
-    n = 4
+    n = 10
     cs = CubedSphere(n)
     grid = cs.getUnstructuredGrid()
 
     fc = FluxCalculator(grid, edgeIntegral)
 
-    numSegments = 2
+    numSegments = 20
 
     piHalf = 0.5*math.pi
-    lamA, theA = 0.0, 2.0*numpy.pi
-    lamB, theB = 0.9*piHalf, 0.9*piHalf
+    lamA, lamB = -numpy.pi, numpy.pi
+    theA, theB = 0.9*piHalf, 0.9*piHalf
 
     dLam, dThe = (lamB - lamA)/float(numSegments), (theB - theA)/float(numSegments)
 
@@ -501,6 +504,7 @@ def testCubedSphere3():
     fc.setLine(line)
 
     totFlux = fc.computeFlux()
+    print('fc.polyline2Flux = {}'.format(fc.polyline2Flux))
 
     exact = psi(lamB, theB) - psi(lamA, theA)
     print('testCubedSphere3: Total flux: {} exact: {}'.format(totFlux, exact))
@@ -508,6 +512,8 @@ def testCubedSphere3():
 
 
 if __name__ == '__main__':
+    testCubedSphere3()
+
     testClosed()
     testOpenSmall()
     testOpenSmall2()
@@ -517,4 +523,3 @@ if __name__ == '__main__':
     testOpenSmall3ThreeSegments()
     testCubedSphere1()
     testCubedSphere2()
-    testCubedSphere3()
