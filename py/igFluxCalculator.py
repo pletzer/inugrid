@@ -452,6 +452,33 @@ def testCubedSphere1():
     exact = psi(lamB, theB) - psi(lamA, theA)
     assert abs(totFlux - exact) < 0.02
 
+def testCubedSphere2():
+    from igCubedSphere import CubedSphere
+
+    n = 10
+    cs = CubedSphere(n)
+    grid = cs.getUnstructuredGrid()
+
+    fc = FluxCalculator(grid, edgeIntegral)
+
+    numSegments = 2
+
+    piHalf = 0.5*math.pi
+    lamA, theA = 0.2 * piHalf, 0.5*piHalf
+    lamB, theB = 0.7 * piHalf, 0.5*piHalf
+
+    dLam, dThe = (lamB - lamA)/float(numSegments), (theB - theA)/float(numSegments)
+
+    # expression for the contour in lon-lat coordinates
+    line = numpy.array([(lamA + i*dLam, theA + i*dThe) for i in range(numSegments + 1)]).reshape(numSegments + 1, 2)
+    fc.setLine(line)
+
+    totFlux = fc.computeFlux()
+
+    print('testCubedSphere2: Total flux: {}'.format(totFlux))
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    assert abs(totFlux - exact) < 0.02
+
 
 if __name__ == '__main__':
     testClosed()
@@ -462,3 +489,4 @@ if __name__ == '__main__':
     testOpenSmall3TwoSegments()
     testOpenSmall3ThreeSegments()
     testCubedSphere1()
+    testCubedSphere2()
