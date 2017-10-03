@@ -26,12 +26,18 @@ class CartesianAdvection:
         self.cellLocator.SetDataSet(self.grid)
         self.cellLocator.BuildLocator()
 
-    def setFaceIntegral(self, faceId):
+    def setVectorFieldFunction(self, vectorFunction):
         """
-        Set the stream function
-        @param faceId
+        Set the vector field function
+        @param x position
         """
-        pass
+        self.tendency = vectorFunction
+
+    def getVectorFieldFromFaceFluxes(self, x):
+    	"""
+    	Interpolate the vector field from face fluxes
+    	"""
+    	
 
     def setPosition(self, pos):
         """
@@ -45,11 +51,8 @@ class CartesianAdvection:
         Advance the point by dt
         @param dt time interval
         """
-        
-        # find the cell that contains the point
+        return scipy.integrate.odeint(self.tendency, self.x0, dt, args=self.grid)
 
-        # advect the point along the velocity field until the point intersect 
-        # cell face
 
     def tendency(self, x):
         """
