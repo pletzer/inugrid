@@ -4,13 +4,13 @@ import igAreas
 
 class LatLonElv:
 
-    def __init__(self, numLats, numLons, numElvs, radius=1.0, maxRelElv = 0.1):
+    def __init__(self, numLons, numLats, numElvs, radius=1.0, maxRelElv = 0.1):
 
         # this is tp convert from structured to unstructured grid
         self.appendGrids = vtk.vtkAppendFilter()
 
         # create grid
-        numLats1, numLons1, numElvs1 = numLats + 1, numLons + 1, numElvs + 1
+        numLons1, numLats1, numElvs1 = numLons + 1, numLats + 1, numElvs + 1
         lats = numpy.linspace(-numpy.pi/2., numpy.pi/2., numLats1)
         lons = numpy.linspace(0., 2*numpy.pi, numLons1)
         elvs = numpy.linspace(0., maxRelElv, numElvs1)
@@ -21,7 +21,7 @@ class LatLonElv:
         eelvs = eelvs.flat
 
         # coordinates
-        ntot = numLats1 * numLons1 * numElvs1
+        ntot = numLons1 * numLats1 * numElvs1
         self.xyz = numpy.zeros((ntot, 3), numpy.float64)
         rr = eelvs.copy()
         rr += 1.0
@@ -42,6 +42,7 @@ class LatLonElv:
         self.pts.SetData(self.vxyz)
 
         self.sgrid = vtk.vtkStructuredGrid()
+        # inverse order that's how VTK expects it!
         self.sgrid.SetDimensions(numElvs1, numLats1, numLons1)
         self.sgrid.SetPoints(self.pts)
 
@@ -93,8 +94,8 @@ class LatLonElv:
 
 #############################################################################
 def test():
-    numLats, numLons, numElvs = 8, 16, 1
-    ll3 = LatLonElv(numLats, numLons, numElvs,)
+    numLons, numLats, numElvs = 16, 8, 1
+    ll3 = LatLonElv(numLons, numLats, numElvs,)
     grid = ll3.getUnstructuredGrid()
     ll3.save('ll3.vtk')
     ll3.show()
