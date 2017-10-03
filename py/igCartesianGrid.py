@@ -40,7 +40,8 @@ class CartesianGrid:
         self.pts.SetData(self.vxyz)
 
         self.sgrid = vtk.vtkStructuredGrid()
-        self.sgrid.SetDimensions(nx1, ny1, nz1)
+        # VTK requires indexing to be in reverse order
+        self.sgrid.SetDimensions(nz1, ny1, nx1)
         self.sgrid.SetPoints(self.pts)
 
         # convert the structured grid into an unstructured grid
@@ -95,23 +96,9 @@ def test():
     ns = (10, 11, 12)
     ls = (1., 1.1, 1.2)
     cart = CartesianGrid(ns, ls)
-    grid = cart.getUnstructuredGrid()
-
-    # find cell
-    cellLocator = vtk.vtkCellLocator()
-    cellLocator.SetDataSet(grid)
-    cellLocator.BuildLocator()
-
-    # target point
-    x = numpy.array([ls[0]/1.234, ls[1]/2.345, ls[2]/3.456])
-    cell = vtk.vtkGenericCell()
-    tol2 = 1.e-10
-    pcoords = numpy.array([-1., -1., -1.])
-    weights = numpy.array([-1., -1., -1.])
-    cellId = cellLocator.FindCell(x, tol2, cell, pcoords, weights)
-    print('cellId = {} pcoords = {} weights = {}'.format(cellId, pcoords, weights))
+    grid = cart.getUnstructuredGrid()    
     #cart.save('cart.vtk')
-    #cart.show()
+    cart.show()
 
 if __name__ == '__main__':
     test()

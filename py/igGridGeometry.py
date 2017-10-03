@@ -52,18 +52,22 @@ class GridGeometry:
         @note call this after findCell(x)
         """
 
+        # note that VTK stores the data in inverse order to C
+        # so we define a complementary index
+        compIndex = 2 - index
+
         # save the paramatric position
         pcoordsBase = self.pcoords.copy()
 
         dXi = numpy.zeros((3,), numpy.float64)
-        dPlus = 1.0 - self.pcoords[index]
-        dMnus = self.pcoords[index] - 0.0
+        dPlus = 1.0 - self.pcoords[compIndex]
+        dMnus = self.pcoords[compIndex] - 0.0
 
-        dXi[index] = dPlus
+        dXi[compIndex] = dPlus
         self.pcoords = pcoordsBase + dXi
         xPlus = self.getX()
 
-        dXi[index] = dMnus
+        dXi[compIndex] = dMnus
         self.pcoords = pcoordsBase - dXi
         xMnus = self.getX()
 
@@ -108,6 +112,36 @@ class GridGeometry:
 
 ###############################################################################
 
+def testCartesian():
+    from igCartesianGrid import CartesianGrid
+
+    ns = (10, 11, 12)
+    ls = (1.0, 1.1, 1.2)
+    cart =CartesianGrid(ns, ls)
+    grid = cart.getUnstructuredGrid()
+
+    geom = GridGeometry(grid)
+
+    # can we find the cell?
+    target = numpy.array([0.3, 0.4, 0.5])
+    geom.findCell(target)
+    print('cellId for target = {} is {} (pcoords = {})'.format(target, geom.cellId, geom.pcoords))
+
+    # can we get back the position?
+    target2 = geom.getX()
+    print('position obtained from interpolation: {}'.format(target2))
+
+    jac = geom.getJac()
+    print('Jacobian: {} should be 0.1**3 = 1.e-3'.format(jac))
+
+    grad0 = geom.getGradXi(0)
+    grad1 = geom.getGradXi(1)
+    grad2 = geom.getGradXi(2)
+    print('grad0 = {} (should be [10, 0, 0])'.format(grad0))
+    print('grad1 = {} (should be [0, 10, 0])'.format(grad1))
+    print('grad2 = {} (should be [0, 0, 10])'.format(grad2))
+
+
 def testSphere():
     from igLatLonElv import LatLonElv
 
@@ -136,9 +170,6 @@ def testSphere():
     print('grad0 = {} grad1 = {} grad2 = {}'.format(grad0, grad1, grad2))
     
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
+    testCartesian()
     testSphere()
-
-
-
-
