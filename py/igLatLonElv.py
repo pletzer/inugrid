@@ -42,7 +42,7 @@ class LatLonElv:
         self.pts.SetData(self.vxyz)
 
         self.sgrid = vtk.vtkStructuredGrid()
-        self.sgrid.SetDimensions(numLons1, numLats1, numElvs1)
+        self.sgrid.SetDimensions(numElvs1, numLats1, numLons1)
         self.sgrid.SetPoints(self.pts)
 
         self.appendGrids.AddInputData(self.sgrid)
