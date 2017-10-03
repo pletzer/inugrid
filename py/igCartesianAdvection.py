@@ -26,12 +26,12 @@ class CartesianAdvection:
         self.cellLocator.SetDataSet(self.grid)
         self.cellLocator.BuildLocator()
 
-    def setStreamFunction(self, function):
+    def setFaceIntegral(self, faceId):
         """
         Set the stream function
-        @param function scalar function of position
+        @param faceId
         """
-        self.psiFunc = function
+        pass
 
     def setPosition(self, pos):
         """
@@ -58,7 +58,7 @@ class CartesianAdvection:
         """
         cellId = self.cellLocator.FindCell(x, self.tol2, self.cell, self.pcoords, self.weights)
         if cellId == -1:
-            print('ERROR: could not find cell')
+            print('ERROR: could not find cell for target position {}'.format(x))
             return []
 
         # compute the stream function at the vertices 
