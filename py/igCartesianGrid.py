@@ -3,30 +3,35 @@ import vtk
 
 class CartesianGrid:
 
-    def __init__(self, nx, ny, lx, ly):
+    def __init__(self, ns, ls):
+        """
+        Create Cartesian grid
+        @param ns number of cells in x, y, and z (3-tuple)
+        @param ls domain sizes in x, y, and z
+        """
 
-        # this is tp convert from structured to unstructured grid
+        # to convert from structured to unstructured grid
         self.appendGrids = vtk.vtkAppendFilter()
 
         # create grid
-        nx1, ny1 = nx + 1, ny + 1
+        lx, ly, lz = ls
+        nx, ny, nz = ns
+        nx1, ny1, nz1 = nx + 1, ny + 1, nz + 1
+        ntot = nx1 * ny1 * nz1
         xs = numpy.linspace(0., lx, nx1)
         ys = numpy.linspace(0., ly, ny1)
-        xxs, yys = numpy.meshgrid(xs, ys)
-
-        xxs = xxs.flat
-        yys = yys.flat
+        zs = numpy.linspace(0., lz, nz1)
+        xxs, yys, zzs = numpy.meshgrid(xs, ys, zs, sparse=False, indexing='ij')
 
         # coordinates
-        self.xyz = numpy.zeros((nx1*ny1, 3), numpy.float64)
-        self.xyz[:, 0] = xxs
-        self.xyz[:, 1] = yys
-        self.xyz[:, 2] = 0.0
+        self.xyz = numpy.zeros((ntot, 3), numpy.float64)
+        self.xyz[:, 0] = xxs.flat
+        self.xyz[:, 1] = yys.flat
+        self.xyz[:, 2] = zzs.flat
 
         # create the VTK unstructured grid
         self.vxyz = vtk.vtkDoubleArray()
         self.vxyz.SetNumberOfComponents(3)
-        ntot = nx1 * ny1
         self.vxyz.SetNumberOfTuples(ntot)
         self.vxyz.SetVoidArray(self.xyz, 3*ntot, 1)
 
@@ -35,9 +40,10 @@ class CartesianGrid:
         self.pts.SetData(self.vxyz)
 
         self.sgrid = vtk.vtkStructuredGrid()
-        self.sgrid.SetDimensions(nx1, ny1, 1)
+        self.sgrid.SetDimensions(nx1, ny1, nz1)
         self.sgrid.SetPoints(self.pts)
 
+        # convert the structured grid into an unstructured grid
         self.appendGrids.AddInputData(self.sgrid)
         self.appendGrids.Update()
         self.grid = self.appendGrids.GetOutput()
@@ -86,12 +92,26 @@ class CartesianGrid:
 
 #############################################################################
 def test():
-    nx, ny = 10, 11
-    lx, ly = 2*numpy.pi, 1.0
-    cart = CartesianGrid(nx, ny, lx, ly)
+    ns = (10, 11, 12)
+    ls = (1., 1.1, 1.2)
+    cart = CartesianGrid(ns, ls)
     grid = cart.getUnstructuredGrid()
-    cart.save('cart.vtk')
-    cart.show()
+
+    # find cell
+    cellLocator = vtk.vtkCellLocator()
+    cellLocator.SetDataSet(grid)
+    cellLocator.BuildLocator()
+
+    # target point
+    x = numpy.array([ls[0]/1.234, ls[1]/2.345, ls[2]/3.456])
+    cell = vtk.vtkGenericCell()
+    tol2 = 1.e-10
+    pcoords = numpy.array([-1., -1., -1.])
+    weights = numpy.array([-1., -1., -1.])
+    cellId = cellLocator.FindCell(x, tol2, cell, pcoords, weights)
+    print('cellId = {} pcoords = {} weights = {}'.format(cellId, pcoords, weights))
+    #cart.save('cart.vtk')
+    #cart.show()
 
 if __name__ == '__main__':
     test()

@@ -2,30 +2,49 @@ import numpy
 import scipy
 import vtk
 
-class CartesianAdvection2d:
+class CartesianAdvection:
 
     def __init__(self):
+        """
+        Constructor
+        """
         self.grid = None
         self.psiFunc = None
         self.x0 = []
         self.cellLocator = vtk.vtkCellLocator()
-        self.parameterLambda = vtk.mutable(0)
         self.tol2 = 1.e-10
-        self.cell = vtk.vtkHexahedron()
+        self.cell = vtk.vtkGenericCell()
         self.pcoords = numpy.zeros((3,), numpy.float64)
         self.weights = numpy.zeros((8,), numpy.float64)
 
     def setGrid(self, grid):
+        """
+        Set the grid
+        @param grid vtkUnstructuredGrid instance
+        """
         self.grid = grid
         self.cellLocator.SetDataSet(self.grid)
+        self.cellLocator.BuildLocator()
 
     def setStreamFunction(self, function):
+        """
+        Set the stream function
+        @param function scalar function of position
+        """
         self.psiFunc = function
 
     def setPosition(self, pos):
+        """
+        Set the target position
+        @param pos numpy array of size 3
+        """
         self.x0 = pos
 
-    def advance(self, time):
+    def advance(self, dt):
+        """
+        Advance the point by dt
+        @param dt time interval
+        """
         
         # find the cell that contains the point
 
@@ -33,22 +52,27 @@ class CartesianAdvection2d:
         # cell face
 
     def tendency(self, x):
-        res = self.cellLocator.FindCell(x, self.tol2, self.cell, self.pcoords, self.weights)
-        if res == -1:
-            print('could not find cell')
-            return
+        """
+        Compute the tendency
+        @param x target point
+        """
+        cellId = self.cellLocator.FindCell(x, self.tol2, self.cell, self.pcoords, self.weights)
+        if cellId == -1:
+            print('ERROR: could not find cell')
+            return []
 
         # compute the stream function at the vertices 
         points = self.grid.GetPoints()
         pointIds = self.cell.GetPointIds()
-        psis = numpy.zeros((8,), numpy.float64)
+        numPoints = pointIds.GetNumberOfIds()
+        psis = numpy.zeros((numPoints,), numpy.float64)
         for i in pointIds.GetNumberOfIds():
             pointId = pointIds.GetId(i)
             xyz = points.GetPoint(pointId)
+            # evalaute the stream function
             psis.append(self.psiFunc(xyz))
 
-
-        # compute the velocity by interpolating the edge values
+        # compute the velocity by interpolating the edge values using the face basis functions
         xi0, xi1, xi2 = self.pcoords
         vx = (1.0 - xi1)*(psis[1] - psis[0]) + xi1*(psi[2] - psis[3])
         vy = (1.0 - xi0)*(psis[3] - psis[0]) + xi0*(psi[2] - psis[1])

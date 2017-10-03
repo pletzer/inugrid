@@ -3,9 +3,8 @@ from igCubedSphere import CubedSphere
 import numpy
 
 """
-Example showing how to comput the the flux across stream function grad lambda, 
-ie the 2-form is d lambda ^ dr and we integrate around the north pole.  The 
-result should be 2*pi. 
+Example showing how to compute the flux across stream function grad lambda, 
+ie the 2-form is d lambda ^ dr.  The result across the north pole should be 2*pi. 
 """
 
 def psi(x, y):
