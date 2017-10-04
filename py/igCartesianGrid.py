@@ -3,7 +3,7 @@ import vtk
 
 class CartesianGrid:
 
-    def __init__(self, ns, ls):
+    def __init__(self, ns, ls, origin=(0., 0., 0.)):
         """
         Create Cartesian grid
         @param ns number of cells in x, y, and z (3-tuple)
@@ -18,9 +18,9 @@ class CartesianGrid:
         nx, ny, nz = ns
         nx1, ny1, nz1 = nx + 1, ny + 1, nz + 1
         ntot = nx1 * ny1 * nz1
-        xs = numpy.linspace(0., lx, nx1)
-        ys = numpy.linspace(0., ly, ny1)
-        zs = numpy.linspace(0., lz, nz1)
+        xs = numpy.linspace(origin[0], lx, nx1)
+        ys = numpy.linspace(origin[1], ly, ny1)
+        zs = numpy.linspace(origin[2], lz, nz1)
         xxs, yys, zzs = numpy.meshgrid(xs, ys, zs, sparse=False, indexing='ij')
 
         # coordinates

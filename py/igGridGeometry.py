@@ -36,6 +36,22 @@ class GridGeometry:
         self.cellId = self.cellLocator.FindCell(self.x, self.tol2, self.cell, self.pcoords, self.weights)
         return (self.cellId >= 0)
 
+    def getVertices(self):
+        """
+        Get the vertices
+        @note call this after findCell(x)
+        """
+        verts = []
+        pts = self.grid.GetPoints()
+        ptIds = self.cell.GetPointIds()
+        pt = numpy.zeros((3,), numpy.float64)
+        numPts = ptIds.GetNumberOfIds()
+        for i in range(numPts):
+            ptId = ptIds.GetId(i)
+            pts.GetPoint(ptId, pt)
+            verts.append(pt.copy())
+        return verts
+
     def getX(self):
         """
         Interpolate the cell vertices to get the position

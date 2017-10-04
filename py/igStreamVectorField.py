@@ -36,32 +36,32 @@ class StreamVectorField:
         """
         self.streamFunc = streamFunction
 
-    def __call__(self, x):
+    def __call__(self, x, *args):
         """
         Overload of () operator
         @param x position 
         @return vector field at above position
         """
 
-        res = numy.zeros((3,), numpy.float64)
+        res = numpy.zeros((3,), numpy.float64)
 
         # call findcell and check if point is in domain, if not just return 0s
         if not self.geom.findCell(x):
-            return self.res
+            return res
 
         # get the stream function at the cell vertices
         verts = self.geom.getVertices()
 
         # evaluate the stream function at the vertices
-        psis = [self.streamFunc(vert) in verts]
+        psis = [self.streamFunc(vert) for vert in verts]
 
         # get the parametric coordinates of the point in the cell
         xis = self.geom.pcoords
 
         # grad xi x grad xi vectors
-        dS0 = self.geom.getGradX0CrossGradX1(self, 0)
-        dS1 = self.geom.getGradX0CrossGradX1(self, 1)
-        dS2 = self.geom.getGradX0CrossGradX1(self, 2)
+        dS0 = self.geom.getGradX0CrossGradX1(0)
+        dS1 = self.geom.getGradX0CrossGradX1(1)
+        dS2 = self.geom.getGradX0CrossGradX1(2)
         dSs = [dS0, dS1, dS2]
 
         # iterate over the faces
@@ -100,8 +100,8 @@ class StreamVectorField:
                     z1 = verts[ptId1][2]
                     zmid = 0.5*(z0 + z1)
 
-                    psi0 = psi[ptId0]
-                    psi1 = psi[ptId1]
+                    psi0 = psis[ptId0]
+                    psi1 = psis[ptId1]
 
                     # now add the contribution
                     flux += zmid*(psi1 - psi0)
@@ -110,7 +110,7 @@ class StreamVectorField:
                 # the low/high side values
                 weight = (1 - lh)*(1.0 - xi) + lh*xi
 
-                self.res += dS * weight * flux
+                res += dS * weight * flux
 
         return res
 
