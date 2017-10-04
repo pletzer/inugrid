@@ -1,5 +1,6 @@
 import vtk
 import numpy
+import math
 
 class GridGeometry:
     """
@@ -146,20 +147,41 @@ def testSphere():
     from igLatLonElv import LatLonElv
 
     numLons, numLats, numElvs = 16, 8, 1
-    maxRelElv = 1.0
-    sph = LatLonElv(numLons, numLats, numElvs, maxRelElv=maxRelElv)
+    radius = 1.0
+    maxRelElv = 0.5
+    sph = LatLonElv(numLons, numLats, numElvs, radius=radius, maxRelElv=maxRelElv)
     grid = sph.getUnstructuredGrid()
 
     geom = GridGeometry(grid)
 
     # can we find the cell?
-    target = numpy.array([1.2, 0.1, 0.1])
+    x, y, z = 1., 0., 0.
+    r = math.sqrt(x**2 + y**2 + z**2)
+    rho = math.sqrt(x**2 + y**2)
+    the = math.acos(rho/r)
+    lam = math.atan2(y, x)
+    dLam = 2*numpy.pi/float(numLons)
+    dThe = numpy.pi/float(numLats)
+    dR = radius*maxRelElv/float(numElvs)
+
+    lamHat = numpy.array([-y/r, x/r, 0.0])
+    theHat = numpy.array([-z*math.cos(lam)/r, -z*math.sin(lam)/r, rho/r])
+    rHat = numpy.array([x/r, y/r, z/r])
+
+    target = numpy.array([x, y, z])
     geom.findCell(target)
     print('cellId for target = {} is {} (pcoords = {})'.format(target, geom.cellId, geom.pcoords))
 
     # can we get back the position?
     target2 = geom.getX()
     print('position obtained from interpolation: {}'.format(target2))
+
+    dx0 = geom.getDXDXi(0)
+    dx1 = geom.getDXDXi(1)
+    dx2 = geom.getDXDXi(2)
+    print('dx0 = {} (should be about {})'.format(dx0, r*lamHat * dLam))
+    print('dx1 = {} (should be about {})'.format(dx1, r*math.cos(the)*theHat * dThe))
+    print('dx2 = {} (should be about {})'.format(dx2, rHat * dR))
 
     jac = geom.getJac()
     print('Jacobian: {}'.format(jac))
@@ -171,5 +193,5 @@ def testSphere():
     
 
 if __name__ == '__main__':
-    testCartesian()
+    #testCartesian()
     testSphere()
