@@ -22,15 +22,31 @@ grid = cart.getUnstructuredGrid()
 
 geom = GridGeometry(grid)
 
+angle = numpi.pi/6.
+cos_angle = numpy.cos(angle)
+sin_angle = numpy.sin(angle)
+
+# stream function
+def streamFuncExact(x):
+    xp = cos_angle * x[0] - sin_angle * x[1]
+    yp = sin_angle * x[0] + cos_angle * x[1]
+    return numpy.sin(xp)**2 + yp**2
+
 
 def velocityExact(x, *args):
     """
     Exact velocity field
     """
+    xp = cos_angle * x[0] - sin_angle * x[1]
+    yp = sin_angle * x[0] + cos_angle * x[1]
     # -d psi/dx
-    vy = -2. * numpy.sin(x[0]) * numpy.cos(x[0])
+    vyp = -2. * numpy.sin(xp) * numpy.cos(xp)
     # d psi/dy
-    vx = 2. * x[1]
+    vxp = 2. * yp
+
+    vy = vyp * cos_angle - vxp * sin_angle
+    vx = vxp * cos_angle + vyp * sin_angle
+
     return numpy.array([vx, vy, 0.])
 
 def velocityNodal(x, *args):
@@ -66,9 +82,6 @@ def velocityNodal(x, *args):
 
     return res
 
-# stream function
-def streamFuncExact(x):
-    return numpy.sin(x[0])**2 + x[1]**2
 
 def velocityFace(x, *args):
     """
@@ -181,7 +194,7 @@ ts = numpy.linspace(0., 100., 1001)
 
 # solve
 solExact = odeint(velocityExact, x, ts)
-solNodal = odeint(velocityFaceAsNodal, x, ts)
+solNodal = odeint(velocityFaceAsNodal2, x, ts)
 solFace = odeint(velocityFace, x, ts)
 
 # plot
