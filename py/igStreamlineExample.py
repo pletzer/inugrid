@@ -131,6 +131,47 @@ def velocityFaceAsNodal(x, *args):
 
     return res
 
+def velocityFaceAsNodal2(x, *args):
+    """
+    Use the face basis functions to approximate the nodal vector field
+    """
+    res = numpy.zeros((3,), numpy.float64)
+    # find the cell the contains the point
+    found = geom.findCell(x)
+    if not found:
+        # return zero veolocity if outside the domain
+        return res
+
+    # parametric coordinates are stored in inverse order
+    xis = (geom.pcoords[2], geom.pcoords[1])
+    # vertices of the cell
+    pts = geom.cell.GetPoints()
+
+    # depends on the indexing of the hex in VTK
+    verts = [pts.GetPoint(i) for i in (0, 4, 7, 3)]
+
+
+    dx = numpy.array([hs[0], 0., 0.])
+    dy = numpy.array([0., hs[1], 0.])
+    velNodes = []
+    for v in verts:
+        psi0 = streamFuncExact(v)
+        dpsiy = (streamFuncExact(v + dy) - psi0)/hs[1]
+        dpsix = (streamFuncExact(v + dx) - psi0)/hs[0]
+        vx = + dpsiy
+        vy = - dpsix
+        velNodes.append(numpy.array([vx, vy, 0.]))
+
+    # bilinear interpolation of velocity at vertices
+    w0 = (1. - xis[0]) * (1. - xis[1])
+    w1 = (xis[0] - 0.) * (1. - xis[1])
+    w2 = (xis[0] - 0.) * (xis[1] - 0.)
+    w3 = (1. - xis[0]) * (xis[1] - 0.)
+
+    res = w0*velNodes[0] + w1*velNodes[1] + w2*velNodes[2] + w3*velNodes[3]
+
+    return res
+
 
 # initial condition
 x = numpy.array([numpy.pi/2. + 0.1, 0.015, 0.0])

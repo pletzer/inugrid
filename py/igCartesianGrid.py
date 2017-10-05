@@ -3,7 +3,7 @@ import vtk
 
 class CartesianGrid:
 
-    def __init__(self, ns, ls, origin=(0., 0., 0.)):
+    def __init__(self, ns, ls, origin=(0., 0., 0.), nodalVecData=None):
         """
         Create Cartesian grid
         @param ns number of cells in x, y, and z (3-tuple)
@@ -43,6 +43,14 @@ class CartesianGrid:
         # VTK requires indexing to be in reverse order
         self.sgrid.SetDimensions(nz1, ny1, nx1)
         self.sgrid.SetPoints(self.pts)
+
+        # attach vector fields
+        self.vField = vtk.vtkDoubleArray()
+        if nodalVecData:
+            self.vField.SetNumberOfComponents(3)
+            self.vField.SetNumberOfTuples(ntot)
+            vField.SetVoidArray(nodalVecData, 3*ntot, 1)
+            self.grid.GetPointData().SetData(self.vField)
 
         # convert the structured grid into an unstructured grid
         self.appendGrids.AddInputData(self.sgrid)
