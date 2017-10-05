@@ -8,26 +8,25 @@ from igGridGeometry import GridGeometry
 """
 Stream function y^2 + sin(x)^2
 v = d psi ^ dz
-
-v is interpolated using bilinear basis functions
 """
 
 #  create the grid
-ns = (60, 30, 1)
+ns = (2*30, 2*15, 1)
 ls = (2*numpy.pi, 3.0, 1.0)
-origin = (0., -1.5, -0.5)
+origin = (0., -2.0, -0.5)
 hs = (ls[0]/float(ns[0]), ls[1]/float(ns[1]), ls[2]/float(ns[2]))
 cart = CartesianGrid(ns, ls, origin)
 grid = cart.getUnstructuredGrid()
 
 geom = GridGeometry(grid)
 
-angle = numpi.pi/6.
+angle = 0.3 #numpy.pi/6.
 cos_angle = numpy.cos(angle)
 sin_angle = numpy.sin(angle)
 
 # stream function
 def streamFuncExact(x):
+    # apply rotation of the coordinates to make it more interesting
     xp = cos_angle * x[0] - sin_angle * x[1]
     yp = sin_angle * x[0] + cos_angle * x[1]
     return numpy.sin(xp)**2 + yp**2
@@ -39,9 +38,11 @@ def velocityExact(x, *args):
     """
     xp = cos_angle * x[0] - sin_angle * x[1]
     yp = sin_angle * x[0] + cos_angle * x[1]
-    # -d psi/dx
+
+    # -d psi/dx'
     vyp = -2. * numpy.sin(xp) * numpy.cos(xp)
-    # d psi/dy
+
+    # d psi/dy'
     vxp = 2. * yp
 
     vy = vyp * cos_angle - vxp * sin_angle
@@ -51,7 +52,7 @@ def velocityExact(x, *args):
 
 def velocityNodal(x, *args):
     """
-    Velocity field linear linterpolated from the exact values at the nodes
+    Velocity field linearly linterpolated using the exact values at the nodes
     """
 
     res = numpy.zeros((3,), numpy.float64)
@@ -102,8 +103,11 @@ def velocityFace(x, *args):
 
     # depends on the indexing of the hex in VTK
     verts = [pts.GetPoint(i) for i in (0, 4, 7, 3)]
+
+    # stream function at the vertices
     psis = [streamFuncExact(v) for v in verts]
 
+    # integrate the flux and divide by cell width to get an approximation of the derivative
     vx = (1. - xis[0])*(psis[3] - psis[0]) + xis[0]*(psis[2] - psis[1])
     vx /= hs[1]
 
@@ -149,6 +153,7 @@ def velocityFaceAsNodal2(x, *args):
     Use the face basis functions to approximate the nodal vector field
     """
     res = numpy.zeros((3,), numpy.float64)
+
     # find the cell the contains the point
     found = geom.findCell(x)
     if not found:
@@ -160,12 +165,15 @@ def velocityFaceAsNodal2(x, *args):
     # vertices of the cell
     pts = geom.cell.GetPoints()
 
-    # depends on the indexing of the hex in VTK
+    # vertices on the lower z plane
     verts = [pts.GetPoint(i) for i in (0, 4, 7, 3)]
 
-
+    # displacement vectors in the x and y directions
     dx = numpy.array([hs[0], 0., 0.])
     dy = numpy.array([0., hs[1], 0.])
+
+    # compute the velocity by computing finite differences in the 
+    # downwind direction. Assumes a uniform mesh!
     velNodes = []
     for v in verts:
         psi0 = streamFuncExact(v)
@@ -187,10 +195,10 @@ def velocityFaceAsNodal2(x, *args):
 
 
 # initial condition
-x = numpy.array([numpy.pi/2. + 0.1, 0.015, 0.0])
+x = numpy.array([1.7, -0.6, 0.]) #[numpy.pi/2. + 0.1, 0.015, 0.0])
 
 # times
-ts = numpy.linspace(0., 100., 1001)
+ts = numpy.linspace(0., 5., 1001)
 
 # solve
 solExact = odeint(velocityExact, x, ts)
@@ -210,7 +218,9 @@ pylab.plot([solExact[0, 0]], [solExact[0, 1]], 'k*')
 x = numpy.linspace(origin[0], origin[0] + ls[0], 101)
 y = numpy.linspace(origin[1], origin[1] + ls[1], 101)
 xx, yy = numpy.meshgrid(x, y)
-pylab.contour(x, y, numpy.sin(xx)**2 + yy**2, colors='k')
+xxp = cos_angle * xx - sin_angle * yy
+yyp = sin_angle * xx + cos_angle * yy
+pylab.contour(x, y, numpy.sin(xxp)**2 + yyp**2, colors='k')
 ax.set_aspect('equal')
 
 #pylab.title('igStreamlineNodalExample')
