@@ -25,7 +25,7 @@ cos_angle = numpy.cos(angle)
 sin_angle = numpy.sin(angle)
 
 # stream function
-def streamFuncExact(x):
+def streamFuncExact(x, *args):
     # apply rotation of the coordinates to make it more interesting
     xp = cos_angle * x[0] - sin_angle * x[1]
     yp = sin_angle * x[0] + cos_angle * x[1]
@@ -123,6 +123,10 @@ def velocityFace(x, *args):
     #print 'vx, hs, xi0, dpsi_west, dpsi_east = ', vx, hs, xis[0], psis[3] - psis[0], psis[2] - psis[1]
     return res
 
+velocityFace2 = StreamVectorField(grid)
+velocityFace2.setStreamFunction(streamFuncExact)
+
+
 def velocityFaceAsNodal(x, *args):
     """
     Use the face basis functions to approximate the nodal vector field
@@ -217,7 +221,7 @@ for xstart in numpy.linspace(1., 1.4, 3):
     # solve
     solExact = odeint(velocityExact, x, ts)
     solNodal = odeint(velocityFaceAsNodal2, x, ts)
-    solFace = odeint(velocityFace, x, ts)
+    solFace = odeint(velocityFace2, x, ts)
 
 
     pylab.plot(solExact[:, 0], solExact[:, 1], 'g-')

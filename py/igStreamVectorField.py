@@ -18,7 +18,7 @@ class StreamVectorField:
         # to compute the metric quantities
         self.geom = GridGeometry(grid)
 
-        # maps a face to a list of vertex Ids (hexagon)
+        # maps a face to a list of vertex Ids (hexahedron)
         self.faces = {
             (0 ,-1, -1): (0, 3, 2, 1),
             (1, -1, -1): (4, 7, 6, 5),
@@ -63,6 +63,7 @@ class StreamVectorField:
         dS1 = self.geom.getGradXiCrossGradXi(1)
         dS2 = self.geom.getGradXiCrossGradXi(2)
         dSs = [dS0, dS1, dS2]
+        zHat = numpy.array([0., 0., 1.])
 
         # iterate over the faces
         for dim in (0, 1, 2):
@@ -86,25 +87,25 @@ class StreamVectorField:
                 # iterate over the edges to compute the flux associated with this face
                 # by performing a loop integral (ie using Stokes's theorem). Note that
                 # the stream function is expected to be constant in the last coordinate
-                # so the line integral is expected to be zero along the last, vertical 
-                # coordinate. Along the other directions, it is just the difference
-                # between the psi's
+                # and only the vertical edges contribute
                 flux = 0.0
                 for i0 in range(len(ptIds)):
+
                     i1 = (i0 + 1) % 4
+
                     ptId0 = ptIds[i0]
                     ptId1 = ptIds[i1]
-                    # the vertical coordinate, expect z0 == z1 along edges where 
-                    # psi changes
-                    z0 = verts[ptId0][2]
-                    z1 = verts[ptId1][2]
-                    zmid = 0.5*(z0 + z1)
+
+                    vert0 = verts[ptId0]
+                    vert1 = verts[ptId1]
 
                     psi0 = psis[ptId0]
                     psi1 = psis[ptId1]
 
                     # now add the contribution
-                    flux += zmid*(psi1 - psi0)
+                    psiMid = 0.5*(psi0 + psi1)
+
+                    flux += psiMid * (numpy.dot(vert1 - vert0, zHat))
                 
                 # compute the vector basis at this location by interpolating 
                 # the low/high side values
