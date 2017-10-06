@@ -11,16 +11,16 @@ v = d psi ^ dz
 """
 
 #  create the grid
-ns = (2*30, 2*15, 1)
-ls = (2*numpy.pi, 3.0, 1.0)
-origin = (0., -2.0, -0.5)
+ns = (2*12, 2*6, 1) #(2*30, 2*15, 1)
+ls = (6., 3., 1.) #(2*numpy.pi, 3.0, 1.0)
+origin = (0, -1.5, -0.5) # (0., -2.0, -0.5)
 hs = (ls[0]/float(ns[0]), ls[1]/float(ns[1]), ls[2]/float(ns[2]))
 cart = CartesianGrid(ns, ls, origin)
 grid = cart.getUnstructuredGrid()
 
 geom = GridGeometry(grid)
 
-angle = 0.3 #numpy.pi/6.
+angle = 0.1 # 0.3 #numpy.pi/6.
 cos_angle = numpy.cos(angle)
 sin_angle = numpy.sin(angle)
 
@@ -36,6 +36,11 @@ def velocityExact(x, *args):
     """
     Exact velocity field
     """
+    #zero = numpy.zeros((3,), numpy.float64)
+    #for i in range(3):
+    #    if x[i] < origin[i] or x[i] > origin[i] + ls[i]:
+    #        return zero
+
     xp = cos_angle * x[0] - sin_angle * x[1]
     yp = sin_angle * x[0] + cos_angle * x[1]
 
@@ -115,6 +120,7 @@ def velocityFace(x, *args):
     vy /= hs[0]
 
     res[0:2] = vx, vy
+    #print 'vx, hs, xi0, dpsi_west, dpsi_east = ', vx, hs, xis[0], psis[3] - psis[0], psis[2] - psis[1]
     return res
 
 def velocityFaceAsNodal(x, *args):
@@ -193,33 +199,41 @@ def velocityFaceAsNodal2(x, *args):
 
     return res
 
-
-# initial condition
-x = numpy.array([1.7, -0.6, 0.]) #[numpy.pi/2. + 0.1, 0.015, 0.0])
-
-# times
-ts = numpy.linspace(0., 5., 1001)
-
-# solve
-solExact = odeint(velocityExact, x, ts)
-solNodal = odeint(velocityFaceAsNodal2, x, ts)
-solFace = odeint(velocityFace, x, ts)
+# time steps
+ts = numpy.linspace(0., 10.0, 101)
 
 # plot
 fig = pylab.figure()
 ax = fig.add_subplot(111)
 
-pylab.plot(solExact[:, 0], solExact[:, 1], 'g-')
-pylab.plot(solNodal[:, 0], solNodal[:, 1], 'r-')
-pylab.plot(solFace[:, 0], solFace[:, 1], 'b-')
-pylab.legend(['exact', 'nodal', 'face'])
-pylab.plot([solExact[0, 0]], [solExact[0, 1]], 'k*')
+# vary initial conditions
+ystart = 0.1
+for xstart in numpy.linspace(1., 1.4, 3):
 
+    # initial condition
+    x = numpy.array([xstart, ystart, 0.]) 
+
+
+    # solve
+    solExact = odeint(velocityExact, x, ts)
+    solNodal = odeint(velocityFaceAsNodal2, x, ts)
+    solFace = odeint(velocityFace, x, ts)
+
+
+    pylab.plot(solExact[:, 0], solExact[:, 1], 'g-')
+    pylab.plot(solNodal[:, 0], solNodal[:, 1], 'r-')
+    pylab.plot(solFace[:, 0], solFace[:, 1], 'b-')
+    pylab.plot([solExact[0, 0]], [solExact[0, 1]], 'k*', markersize=10)
+
+
+pylab.legend(['exact', 'nodal', 'face'])
+
+# plot the stream function
 x = numpy.linspace(origin[0], origin[0] + ls[0], 101)
 y = numpy.linspace(origin[1], origin[1] + ls[1], 101)
 xx, yy = numpy.meshgrid(x, y)
-xxp = cos_angle * xx - sin_angle * yy
-yyp = sin_angle * xx + cos_angle * yy
+xxp = cos_angle*xx - sin_angle*yy
+yyp = sin_angle*xx + cos_angle*yy
 pylab.contour(x, y, numpy.sin(xxp)**2 + yyp**2, colors='k')
 ax.set_aspect('equal')
 
