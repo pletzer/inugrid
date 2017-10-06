@@ -20,12 +20,12 @@ class StreamVectorField:
 
         # maps a face to a list of vertex Ids (hexagon)
         self.faces = {
-            (0 ,-1, -1): [0, 3, 7, 4],
-            (1, -1, -1): [1, 2, 6, 5],
-            (-1, 0, -1): [1, 0, 4, 5],
-            (-1, 1, -1): [2, 3, 7, 6],
-            (-1, -1, 0): [0, 1, 2, 3],
-            (-1, -1, 1): [4, 5, 6, 7],
+            (0 ,-1, -1): (0, 3, 2, 1),
+            (1, -1, -1): (4, 7, 6, 5),
+            (-1, 0, -1): (0, 1, 5, 4),
+            (-1, 1, -1): (3, 2, 6, 7),
+            (-1, -1, 0): (0, 4, 7, 3),
+            (-1, -1, 1): (1, 5, 6, 2),
         }
 
 
@@ -59,9 +59,9 @@ class StreamVectorField:
         xis = self.geom.pcoords
 
         # grad xi x grad xi vectors
-        dS0 = self.geom.getGradX0CrossGradX1(0)
-        dS1 = self.geom.getGradX0CrossGradX1(1)
-        dS2 = self.geom.getGradX0CrossGradX1(2)
+        dS0 = self.geom.getGradXiCrossGradXi(0)
+        dS1 = self.geom.getGradXiCrossGradXi(1)
+        dS2 = self.geom.getGradXiCrossGradXi(2)
         dSs = [dS0, dS1, dS2]
 
         # iterate over the faces

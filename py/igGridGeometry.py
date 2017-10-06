@@ -117,7 +117,7 @@ class GridGeometry:
         jac = self.getJac()
         return numpy.cross(dx1, dx2) / jac
 
-    def getGradX0CrossGradX1(self, indexPerp):
+    def getGradXiCrossGradXi(self, indexPerp):
         """
         Compute the cross product of the gradients of position with respect to the parametric coordinates
         @param indexPerp the complementatary index, eg. (0, 1) -> 2, (1, 2) - > 0, (2, 0) -> 1
@@ -207,7 +207,25 @@ def testSphere():
     grad2 = geom.getGradXi(2)
     print('grad0 = {} grad1 = {} grad2 = {}'.format(grad0, grad1, grad2))
     
+def testCellVertexIndexing():
+    from igCartesianGrid import CartesianGrid
+    ns = (1, 2, 3)
+    ls = (1., 2., 3.)
+    cart = CartesianGrid(ns, ls)
+    grid = cart.getUnstructuredGrid()
+
+    geom = GridGeometry(grid)
+
+    # can we find the cell?
+    x, y, z = 0.1, 1.2, 2.3
+    target = numpy.array([x, y, z])
+    geom.findCell(target)
+    pts = geom.cell.GetPoints()
+    numPts = pts.GetNumberOfPoints()
+    for i in range(numPts):
+        print i, pts.GetPoint(i)
 
 if __name__ == '__main__':
     #testCartesian()
+    testCellVertexIndexing()
     testSphere()
