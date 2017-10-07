@@ -204,7 +204,7 @@ def velocityFaceAsNodal2(x, *args):
     return res
 
 # time steps
-ts = numpy.linspace(0., 10.0, 101)
+ts = numpy.linspace(0., 5.0, 101) #10.0, 101)
 
 # plot
 fig = pylab.figure()

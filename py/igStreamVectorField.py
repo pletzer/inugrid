@@ -5,7 +5,8 @@ from igGridGeometry import GridGeometry
 class StreamVectorField:
     """
     Functor to compute a vector field from a stream function, ie d psi ^ d z 
-    where z is the perpendicular direction.
+    where z is the perpendicular direction. It is assumed that psi = psi(x, y) does
+    not depend on z.
     """
 
     def __init__(self, grid):
@@ -18,14 +19,11 @@ class StreamVectorField:
         # to compute the metric quantities
         self.geom = GridGeometry(grid)
 
-        # maps a face to a list of vertex Ids (hexahedron)
-        self.faces = {
-            (0 ,-1, -1): (0, 3, 2, 1),
-            (1, -1, -1): (4, 7, 6, 5),
-            (-1, 0, -1): (0, 1, 5, 4),
-            (-1, 1, -1): (3, 2, 6, 7),
-            (-1, -1, 0): (0, 4, 7, 3),
-            (-1, -1, 1): (1, 5, 6, 2),
+        self.psiIndices = {
+            (0 ,-1, -1): (0, 3),
+            (1, -1, -1): (4, 7),
+            (-1, 0, -1): (4, 0),
+            (-1, 1, -1): (7, 3),
         }
 
 
@@ -66,7 +64,7 @@ class StreamVectorField:
         zHat = numpy.array([0., 0., 1.])
 
         # iterate over the faces
-        for dim in (0, 1, 2):
+        for dim in (0, 1):
 
             # pick the vector that is perpendicular to the face
             dS = dSs[dim]
@@ -81,34 +79,10 @@ class StreamVectorField:
                 face = [-1, -1, -1]
                 face[dim] = lh
 
-                # get the vertex indices for that face
-                ptIds = self.faces[tuple(face)]
+                ptId0, ptId1 = self.psiIndices[tuple(face)]
+                flux = psis[ptId1] - psis[ptId0]
 
-                # iterate over the edges to compute the flux associated with this face
-                # by performing a loop integral (ie using Stokes's theorem). Note that
-                # the stream function is expected to be constant in the last coordinate
-                # and only the vertical edges contribute
-                flux = 0.0
-                for i0 in range(len(ptIds)):
-
-                    i1 = (i0 + 1) % 4
-
-                    ptId0 = ptIds[i0]
-                    ptId1 = ptIds[i1]
-
-                    vert0 = verts[ptId0]
-                    vert1 = verts[ptId1]
-
-                    psi0 = psis[ptId0]
-                    psi1 = psis[ptId1]
-
-                    # now add the contribution
-                    psiMid = 0.5*(psi0 + psi1)
-
-                    flux += psiMid * (numpy.dot(vert1 - vert0, zHat))
-                
-                # compute the vector basis at this location by interpolating 
-                # the low/high side values
+                # interpolate the flux at this location
                 weight = (1 - lh)*(1.0 - xi) + lh*xi
 
                 res += dS * weight * flux

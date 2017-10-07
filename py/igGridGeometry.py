@@ -209,15 +209,15 @@ def testSphere():
     
 def testCellVertexIndexing():
     from igCartesianGrid import CartesianGrid
-    ns = (1, 2, 3)
-    ls = (1., 2., 3.)
+    ns = (1, 1, 1)
+    ls = (1., 1., 1.)
     cart = CartesianGrid(ns, ls)
     grid = cart.getUnstructuredGrid()
 
     geom = GridGeometry(grid)
 
     # can we find the cell?
-    x, y, z = 0.1, 1.2, 2.3
+    x, y, z = 0.1, 0.2, 0.3
     target = numpy.array([x, y, z])
     geom.findCell(target)
     pts = geom.cell.GetPoints()
