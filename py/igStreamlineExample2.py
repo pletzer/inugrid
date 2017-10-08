@@ -5,6 +5,7 @@ from matplotlib import pylab
 from igStreamVectorField import StreamVectorField
 from igCubedSphereElv import CubedSphereElv
 from igGridGeometry import GridGeometry
+from igPolyLineWriter import PolyLineWriter
 
 """
 Stream function y^2 + sin(x)^2
@@ -53,6 +54,7 @@ ts = numpy.linspace(0., 5.0, 101) #10.0, 101)
 
 # vary initial conditions
 theStart = 0.1
+index = 0
 for lamStart in numpy.linspace(1., 1.4, 3):
 
     # initial condition
@@ -60,5 +62,12 @@ for lamStart in numpy.linspace(1., 1.4, 3):
     x = numpy.array([x0, y0, z0]) 
 
     # solve
-    solFace = odeint(velocityFace, x, ts)
+    sol = odeint(velocityFace, x, ts)
+
+    writer = PolyLineWriter(sol)
+    writer.save('trajectory{}.vtk'.format(index))
+
+    index += 1
+
+
 
