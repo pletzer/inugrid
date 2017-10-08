@@ -22,6 +22,7 @@ class CubedSphereElv:
         uu, vv, ww = numpy.meshgrid(us, vs, ws, sparse=False, indexing='ij')
 
         ww += 1.0
+        ww *= radius
 
         # box is [0, 1] x [0, 1], let's fit a sphere inside the box
         centre = numpy.array([0.5, 0.5, 0.5])
@@ -50,7 +51,6 @@ class CubedSphereElv:
 
                 # grid on the box's side/tile 
                 xyz[:, dim0] = (pm + 1.0)/2.
-                xyz[:, dim0] *= ww.flat
                 xyz[:, dim1] = uu.flat
                 xyz[:, dim2] = vv.flat
                 # fix the vertex ordering so the area points outwards
@@ -66,7 +66,7 @@ class CubedSphereElv:
                     # normalize
                     xyz[:, i] /= dist
                     # extend to the sphere's surface
-                    xyz[:, i] *= radius
+                    xyz[:, i] *= ww.flat # ww is (1 + elvs)*radius
 
                 # create the VTK unstructired grid
                 tileXyz = vtk.vtkDoubleArray()
