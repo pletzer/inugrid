@@ -1,8 +1,9 @@
 import numpy
+import math
 from scipy.integrate import odeint
 from matplotlib import pylab
 from igStreamVectorField import StreamVectorField
-from igCartesianGrid import CartesianGrid
+from igCubedSphereElv import CubedSphereElv
 from igGridGeometry import GridGeometry
 
 """
@@ -11,64 +12,53 @@ v = d psi ^ dz
 """
 
 #  create the grid
-ns = (60, 30, 1)
-ls = (2*numpy.pi, 2.0, 1.0)
-origin = (0., -1.0, -0.5)
-hs = (ls[0]/float(ns[0]), ls[1]/float(ns[1]), ls[2]/float(ns[2]))
-cart = CartesianGrid(ns, ls, origin)
+n = 10
+radius, maxRelElv = 1.0, 1.0
+midRadius = radius * (1.0 + 0.5*maxRelElv)
+cart = CubedSphereElv(numCellsPerTile=n, numElvs=1, radius=radius, maxRelElv=1.0)
 grid = cart.getUnstructuredGrid()
-
 geom = GridGeometry(grid)
 
+angle = 0.0 # 0.3 #numpy.pi/6.
+cos_angle = numpy.cos(angle)
+sin_angle = numpy.sin(angle)
 
 # stream function
-def streamFunc(x):
-    return numpy.sin(x[0])**2 + x[1]**2
+def streamFuncExact(xyz, *args):
+    x, y, z = xyz
+    rhoSq = x**2 + y**2
+    r = numpy.sqrt(rhoSq + z**2)
+    rho = numpy.sqrt(rhoSq)
+    the = math.atan2(z, rho)
+    lam = math.atan2(y, x)
+    # apply rotation to the coordinates
+    lamp = cos_angle * lam - sin_angle * the
+    thep = sin_angle * lam + cos_angle * the
+    return numpy.sin(lamp)**2 + thep**2
 
-def velocity(x, t):
-
-    res = numpy.zeros((3,), numpy.float64)
-
-    # find the cell the contains the point
-    found = geom.findCell(x)
-    if not found:
-        # return zero veolocity if outside the domain
-        return res
-
-    # parametric coordinates are stored in inverse order
-    xis = (geom.pcoords[2], geom.pcoords[1])
-
-    # vertices of the cell
-    pts = geom.cell.GetPoints()
-
-    # depends on the indexing of the hex in VTK
-    verts = [pts.GetPoint(i) for i in (0, 4, 7, 3)]
-    psis = [streamFunc(v) for v in verts]
-
-    #print x, xis
-    #print verts
-
-    # vx
-    vx = (1. - xis[0])*(psis[3] - psis[0]) + xis[0]*(psis[2] - psis[1])
-    vx /= hs[1]
-
-    # vy
-    vy = (1. - xis[1])*(psis[0] - psis[1]) + xis[1]*(psis[3] - psis[2])
-    vy /= hs[0]
-
-    res[0:2] = vx, vy
-
-    #print x, vx, vy
-
-    return res
+def XYZFromLamThe(lam, the):
+    rho = midRadius * numpy.cos(the)
+    z = midRadius * numpy.sin(the)
+    x = rho * numpy.cos(lam)
+    y = rho * numpy.sin(lam)
+    return x, y, z
 
 
+velocityFace = StreamVectorField(grid)
+velocityFace.setStreamFunction(streamFuncExact)
 
-x = numpy.array([0.1, 0.2, 0.0]) #[numpy.pi/2. + 0.01, 0., 0.])
-ts = numpy.linspace(0., 1.0, 11) #numpy.linspace(0., 1000., 10001)
-sol = odeint(velocity, x, ts)
 
-pylab.plot(sol[:, 0], sol[:, 1], 'b-')
-pylab.title('igStreamlineExample2')
+# time steps
+ts = numpy.linspace(0., 5.0, 101) #10.0, 101)
 
-pylab.show()
+# vary initial conditions
+theStart = 0.1
+for lamStart in numpy.linspace(1., 1.4, 3):
+
+    # initial condition
+    x0, y0, z0 = XYZFromLamThe(lamStart, theStart)
+    x = numpy.array([x0, y0, z0]) 
+
+    # solve
+    solFace = odeint(velocityFace, x, ts)
+
