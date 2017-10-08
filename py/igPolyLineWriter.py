@@ -3,35 +3,51 @@ import numpy
 
 class PolyLineWriter:
 
-    def __init__(self, xyzArray):
+    def __init__(self):
         """
         Constructor
-        @param xyzArray [(x,y,z), ...]
         """
         self.appendFilter = vtk.vtkAppendFilter()
 
         self.vpts = vtk.vtkPoints()
-        self.line = vtk.vtkPolyLine()
-        self.ug = vtk.vtkUnstructuredGrid()
+        self.ugrid = vtk.vtkUnstructuredGrid()
 
-        numPoints = xyzArray.shape[0]
-        self.vpts.SetNumberOfPoints(numPoints)
+        self.numPoints = 0
+        self.lines = []
 
-        self.ptIds = self.line.GetPointIds()
-        self.ptIds.SetNumberOfIds(numPoints)
+    def addLine(self, xyzArray):
+        """
+        Add a line
+        @param xyzArray
+        """
+        self.lines.append(xyzArray)
+        self.numPoints += xyzArray.shape[0]
+
+
+    def build(self):
+        """
+        Create unstructured grid
+        """
         index = 0
-        for x, y, z in xyzArray:
-            self.vpts.InsertPoint(index, x, y, z)
-            self.ptIds.SetId(index, index)
-            index += 1
+        self.vpts.SetNumberOfPoints(self.numPoints)
+        self.vlineList = []
+        self.ptIdsList = []
+        for line in self.lines:
+            npts = line.shape[0]
+            vline = vtk.vtkPolyLine()
+            ptIds = vline.GetPointIds()
+            ptIds.SetNumberOfIds(npts)
+            for i in range(npts):
+                self.vpts.SetPoint(index, line[i, :])
+                ptIds.SetId(i, index)
+                index += 1
 
-        # one cell
-        self.ug.InsertNextCell(self.line.GetCellType(), self.ptIds)
-        self.ug.SetPoints(self.vpts)
+            self.ugrid.InsertNextCell(vline.GetCellType(), ptIds)
+            self.vlineList.append(vline)
+            self.ptIdsList.append(ptIds)
+        
+        self.ugrid.SetPoints(self.vpts)
 
-        self.appendFilter.AddInputData(self.ug)
-        self.appendFilter.Update()
-        self.ugrid = self.appendFilter.GetOutput()
 
     def save(self, filename):
         """
