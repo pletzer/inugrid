@@ -6,6 +6,7 @@ from igStreamVectorField import StreamVectorField
 from igCubedSphereElv import CubedSphereElv
 from igGridGeometry import GridGeometry
 from igPolyLineWriter import PolyLineWriter
+from igNodalFunctionWriter import NodalFunctionWriter
 
 """
 Stream function y^2 + sin(x)^2
@@ -48,6 +49,9 @@ def XYZFromLamThe(lam, the):
 velocityFace = StreamVectorField(grid)
 velocityFace.setStreamFunction(streamFuncExact)
 
+# write stream function
+dataWriter = NodalFunctionWriter(grid, streamFuncExact, name='psi')
+dataWriter.save('psi.vtk')
 
 # time steps
 ts = numpy.linspace(0., 5.0, 101) #10.0, 101)
