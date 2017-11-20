@@ -103,6 +103,67 @@ class CubedSphere:
     def getUnstructuredGrid(self):
         return self.grid
 
+    def getUnstructuredGridInSphericalCoords(self):
+
+    	twopi = 2 * numpy.pi
+    	newLtr = numpy.array([0., 0., 0.])
+
+    	# set the coordinates to lon, lat and elevation
+    	ugrid = vtk.vtkUnstructuredGrid()
+    	ugrid.DeepCopy(self.grid)
+    	numPts = ugrid.GetNumberOfPoints()
+    	for i in range(numPts):
+    		ltr = self.getLamTheRhoFromXYZ(self.grid.GetPoint(i))
+    		ugrid.SetPoint(i, ltr)
+
+    	latLonElvPoints = ugrid.GetPoints()
+    	# iterate over the cells and check the areas
+    	numCells = ugrid.GetNumberOfCells()
+    	for i in range(numCells):
+    		cell = ugrid.GetCell(i)
+    		ptIds = cell.GetPointIds()
+    		vertIds = []
+    		vertPts = []
+    		for j in range(ptIds.GetNumberOfIds()):
+    			ptId = ptIds.GetId(j)
+    			ltr = numpy.array(latLonElvPoints.GetPoint(ptId))
+    			vertIds.append(ptId)
+    			vertPts.append(ltr)
+    		d10 = ltr[1] - ltr[0]
+    		d30 = ltr[3] - ltr[0]
+    		d32 = ltr[3] - ltr[2]
+    		d12 = ltr[1] - ltr[2]
+    		area1 = numpy.cross(d10, d30)
+    		area2 = numpy.cross(d32, d12)
+    		if area1 < 0 or area2 < 0:
+    			# take ltr[0] as the base vertex
+    			newLtrIds = []
+    			newLtrPts = []
+    			l0, l1, l2, l3 = [vertPts[i][0] for i in range(len(vertPts))]
+    			newL1 = l1 + twopi
+    			if abs(newL1 - l0) < abs(l1 - l0):
+    				newLtr[:] = vertPts[1]
+    				newLtr[0] = newL1
+    				latLonElvPoints.InsertPoint(newLtr) # copy?
+    				numPts = latLonElvPoints.GetNumberOfPoints()
+    				# reset the point id
+    				ptIds.SetId(1, numPts - 1)
+    			else:
+    				newL1 = l1 - twopi
+    				if abs(newL1 - l0) < abs(l1 - l0):
+    					newLtr[:] = vertPts[1]
+    					newLtr[0] = newL1
+    					latLonElvPoints.InsertPoint(newLtr) # copy?
+    					numPts = latLonElvPoints.GetNumberOfPoints()
+    					# reset the point id
+    					ptIds.SetId(1, numPts - 1)
+
+
+
+
+
+    	return ugrid
+
 
     def save(self, filename):
         writer = vtk.vtkUnstructuredGridWriter()
@@ -161,6 +222,34 @@ class CubedSphere:
         iren.Initialize()
         renWin.Render()
         iren.Start()
+
+
+    def getXYZFromLambdaThetaRho(self, ltr):
+        """
+        Convert from lon/lat to x, y, z
+        @param ltr lambda, theta and radius
+        @return Cartesian coordinates
+        """
+        rho = ltr[2] * numpy.cos(ltr[1])
+        x = rho * numpy.cos(ltr[0])
+        y = rho * numpy.sin(ltr[0])
+        z = ltr[2] * numpy.sin(the)
+        return numpy.array([x, y, z])
+
+
+    def getLambdaThetaRhoFromXYZ(self, xyz):
+        """
+        Convert from Cartesian to lon/lat coordinates
+        @param xyz point 
+        @return longitude, latitude
+        """
+        x, y, z = xyz
+        rhoSq = x**2 + y**2 
+        r = math.sqrt(rhoSq + z**2)
+        rho = math.sqrt(rhoSq)
+        the = math.atan2(z, rho)
+        lam = math.atan2(y, x)
+        return numpy.array([lam, the, r])
 
 
 #############################################################################
