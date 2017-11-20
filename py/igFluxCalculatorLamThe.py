@@ -62,6 +62,21 @@ class FluxCalculatorLamThe:
         	dp = p1 - p0
         	self.lineDistance += numpy.sqrt(numpy.dot(dp, dp))
 
+    def _adjustDateLine(self, lam0, *lams):
+        """
+        Add or subtract 2*pi to minimize the distabce to lam0
+        @param lam0 base longitude in rad
+        @param lams additional longitudes
+        @return array of corrected longitudes (incl lam0)
+        """
+        res = [lam0]
+        twopi = 2*numpy.pi
+        for lam in lams:
+            indx = numpy.argmin([abs(lam - twopi - lam0), abs(lam - lam0), abs(lam + twopi - lam0)])
+            res.append(lam + (indx - 1)*twopi)
+        return res
+
+
     def computeFlux(self):
         """
         Compute the flux
