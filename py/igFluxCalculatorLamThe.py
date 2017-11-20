@@ -5,9 +5,9 @@ from igBasisFunctionIntegral import BasisFunctionIntegral
 from igCellLineIntersector import CellLineIntersector
 
 
-class FluxCalculator:
+class FluxCalculatorLamThe:
     """
-    Class to compute flux across a segmented line
+    Class to compute flux across a segmented line using spherical coordinates
     """
 
     # to handle floating point comparisons
@@ -21,16 +21,28 @@ class FluxCalculator:
         @param integralFunction function of (lam0, lam1, the0, the1)
         """
     	self.grid = grid
+
+    	# build the lambda theta grid from the x, y, z coordinates
+    	self.lamTheGrid = vtk.vtkUnstructuredGrid()
+    	self.lamTheGrid.DeepCopy(self.grid)
+    	# set the coordinates
+    	xyzPoints = self.grid.GetPoints()
+    	lamThePoints = self.lamTheGrid.GetPoints()
+    	for i in range(xyzPoints.GetNumberOfPoints()):
+    		xyz = numpy.array(xyzPoints.getPoint(i))
+    		lam, the = self._getLambdaThetaFromXYZ(xyz)
+    		lamThePoints.SetPoint(lam, the, 0.0)
+
         self.integralFunction = integralFunction
 
         # array of x, y, z positions along the line
-        self.xyzLine = []
+        self.lamTheLine = []
 
         self.totalFlux = 0.0
 
         # to find the cells of self.grid that are intersected by the line
         self.cellLoc = vtk.vtkCellLocator()
-        self.cellLoc.SetDataSet(self.grid)
+        self.cellLoc.SetDataSet(self.lamTheGrid)
         self.cellLoc.BuildLocator()
 
     def setLine(self, lamThes):
@@ -38,18 +50,15 @@ class FluxCalculator:
         Set the line
         @param lamThes [(lam, the), ...]
         """
+        self.lamTheLine = lamThes
+
     	n = len(lamThes)
-        # convert to x, y, z coordinates
-        self.xyzLine = numpy.zeros((n, 3), numpy.float64)
-        for i in range(n):
-            lam, the = lamThes[i, :]
-            self.xyzLine[i, :] = self._getXYZFromLambdaTheta(lam, the)
 
         # compute the total distance
         self.lineDistance = 0.0
         for i in range(n - 1):
-        	p0 = self.xyzLine[i, :]
-        	p1 = self.xyzLine[i + 1, :]
+        	p0 = self._getXYZFromLambdaTheta(self.lamTheLine[i, :])
+        	p1 = self._getXYZFromLambdaTheta(self.lamTheLine[i + 1, :])
         	dp = p1 - p0
         	self.lineDistance += numpy.sqrt(numpy.dot(dp, dp))
 
@@ -82,32 +91,30 @@ class FluxCalculator:
 
         # iterate over the segments of the line
     	for iSeg in range(nSegs):
-            xyzA = self.xyzLine[iSeg, :]
-            xyzB = self.xyzLine[iSeg + 1, :]
-
-            # get the lon/lat
-            lamA, theA = self._getLambdaThetaFromXYZ(xyzA)
-            lamB, theB = self._getLambdaThetaFromXYZ(xyzB)
-            intersector.setLine(lamA, theA, lamB, theB)
-            print '*** iSeg={} (lamA, theA)={} (lamB, theB)={}'.format(iSeg, (lamA, theA), (lamB, theB))
+            lamA, theA = self.lamTheLine[iSeg, :]
+            lamB, theB = self.lamTheLine[iSeg + 1, :]
 
             # (tBeg, tEnd): flux
             segment2Flux = {}
 
             # iterate over the grid cells that are (likely) intersected by the line segment
             # A -> B
-            for cellId in self._findCells(xyzA, xyzB):
+            for cellId in self._findCells(lamA, thetA, lamB, theB):
 
                 cell = self.grid.GetCell(cellId)
                 ptIds = cell.GetPointIds()
 
                 # get the vertices of the quad
-                xyz0, xyz1, xyz2, xyz3 = (self.grid.GetPoint(ptIds.GetId(i)) for i in range(4))
-                lam0, the0 = self._getLambdaThetaFromXYZ(xyz0)
-                lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
-                lam2, the2 = self._getLambdaThetaFromXYZ(xyz2)
-                lam3, the3 = self._getLambdaThetaFromXYZ(xyz3)
-                print '\t--- cellId={} verts 0={} 1={} 2={} 3={}'.format(cellId, (lam0/numpy.pi, the0/numpy.pi), (lam1/numpy.pi, the1/numpy.pi), (lam2/numpy.pi, the2/numpy.pi), (lam3/numpy.pi, the3/numpy.pi),)
+                lt0, lt1, lt2, lt3 = (self.grid.GetPoint(ptIds.GetId(i)) for i in range(4))
+                lam0, the0 = lt0
+                lam1, the1 = lt1
+                lam2, the2 = lt2
+                lam3, the3 = lt3
+                lam0, lam1, lam2, lam3 = self._adjustDayLine(lam0, lam1, lam2, lam3)
+                dummy, lamAPrime, lamBPrime = self.adjustDayLine(lam0, lamA, lamB)
+            	intersector.setLine(lamAPrime, theA, lamBPrime, theB)
+            	print '\t--- iSeg={} (lamA, theA)={} (lamB, theB)={}'.format(iSeg, (lamAPrime, theA), (lamBPrime, theB))
+                print '\t--- cellId={} verts 0={} 1={} 2={} 3={}'.format(cellId, (lam0, the0), (lam1, the1), (lam2, the2), (lam3, the3),)
 
                 intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
@@ -121,18 +128,17 @@ class FluxCalculator:
                     flux = 0.0
 
                     # iterate over the edges
-                    numPts = 4
-                    for i0 in range(numPts):
+                    verts = [(lam0, the0), (lam1, the1), (lam2, the2), (lam3, the3)]
+                    numPts = len(verts)
+                    for i0 in range(numPts - 1):
+
                         i1 = (i0 + 1) % numPts
 
-                        ptId0, ptId1 = ptIds.GetId(i0), ptIds.GetId(i1)
-                        xyz0, xyz1 = self.grid.GetPoint(ptId0), self.grid.GetPoint(ptId1)
-
-                        lam0, the0 = self._getLambdaThetaFromXYZ(xyz0)
-                        lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
+                        l0, t0 = verts[i0]
+                        l1, t1 = verts[i1]
 
                         # assumes counterclockwise orientation
-                        faceFlux = self.integralFunction(lam0, lam1, the0, the1)
+                        faceFlux = self.integralFunction(l0, l1, t0, t1)
 
                         # update the fluxes
                         flux += faceFlux * basisIntegrator(i0)
@@ -180,16 +186,20 @@ class FluxCalculator:
         return totalFlux
 
 
-    def _findCells(self, xyz0, xyz1):
+    def _findCells(self, lamA, theA, lamB, theB):
         """
-        Find all the cells intersected by the line that goes through xyz0 and xyz1
-        @param xyz0 starting point
-        @param xyz1 ending point
+        Find all the cells intersected by the line that goes through A and B
+        @param lamA starting longitude in rad
+        @param theA starting latitude in rad
+        @param lamB ending longitude
+        @param theB ending latitude
         @return list of cells
         """
     	cellIds = vtk.vtkIdList()
         tol = 1.e-3
-        self.cellLoc.FindCellsAlongLine(xyz0, xyz1, tol, cellIds)
+        pA = numpy.array((lamA, theA, 0.0))
+        pB = numpy.array((lamB, theB, 0.0))
+        self.cellLoc.FindCellsAlongLine(pA, pB, tol, cellIds)
         numCells = cellIds.GetNumberOfIds()
         return [cellIds.GetId(i) for i in range(numCells)]
 
