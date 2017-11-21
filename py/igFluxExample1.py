@@ -32,19 +32,19 @@ grid = cs.getUnstructuredGrid()
 fc = FluxCalculator(grid, integralFunction)
 
 # number of contour segments
-numSegments = 10
+numSegments = 1
 
-# start longitude 
-x0 = 1.0
+# start longitude 	
+lamMin, lamMax = 1.0, 1.1
 
 # increment in lambda
-dx = 2.0/numSegments # 0.5 * 2 * numpy.pi / numSegments
+dx = (lamMax - lamMin) / numSegments
 
 # fixed latitude, close to the north pole
 the = 1.0 # 0.9* numpy.pi/2.
 
 # expression for the contour in lon-lat coordinates
-line = numpy.array([(x0 + i*dx, the) for i in range(numSegments + 1)]).reshape(numSegments + 1, 2)
+line = numpy.array([(lamMin + i*dx, the) for i in range(numSegments + 1)]).reshape(numSegments + 1, 2)
 fc.setLine(line)
 
 # compute the flux

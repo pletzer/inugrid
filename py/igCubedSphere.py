@@ -103,67 +103,6 @@ class CubedSphere:
     def getUnstructuredGrid(self):
         return self.grid
 
-    def getUnstructuredGridInSphericalCoords(self):
-
-    	twopi = 2 * numpy.pi
-    	newLtr = numpy.array([0., 0., 0.])
-
-    	# set the coordinates to lon, lat and elevation
-    	ugrid = vtk.vtkUnstructuredGrid()
-    	ugrid.DeepCopy(self.grid)
-    	numPts = ugrid.GetNumberOfPoints()
-    	for i in range(numPts):
-    		ltr = self.getLamTheRhoFromXYZ(self.grid.GetPoint(i))
-    		ugrid.SetPoint(i, ltr)
-
-    	latLonElvPoints = ugrid.GetPoints()
-    	# iterate over the cells and check the areas
-    	numCells = ugrid.GetNumberOfCells()
-    	for i in range(numCells):
-    		cell = ugrid.GetCell(i)
-    		ptIds = cell.GetPointIds()
-    		vertIds = []
-    		vertPts = []
-    		for j in range(ptIds.GetNumberOfIds()):
-    			ptId = ptIds.GetId(j)
-    			ltr = numpy.array(latLonElvPoints.GetPoint(ptId))
-    			vertIds.append(ptId)
-    			vertPts.append(ltr)
-    		d10 = ltr[1] - ltr[0]
-    		d30 = ltr[3] - ltr[0]
-    		d32 = ltr[3] - ltr[2]
-    		d12 = ltr[1] - ltr[2]
-    		area1 = numpy.cross(d10, d30)
-    		area2 = numpy.cross(d32, d12)
-    		if area1 < 0 or area2 < 0:
-    			# take ltr[0] as the base vertex
-    			newLtrIds = []
-    			newLtrPts = []
-    			l0, l1, l2, l3 = [vertPts[i][0] for i in range(len(vertPts))]
-    			newL1 = l1 + twopi
-    			if abs(newL1 - l0) < abs(l1 - l0):
-    				newLtr[:] = vertPts[1]
-    				newLtr[0] = newL1
-    				latLonElvPoints.InsertPoint(newLtr) # copy?
-    				numPts = latLonElvPoints.GetNumberOfPoints()
-    				# reset the point id
-    				ptIds.SetId(1, numPts - 1)
-    			else:
-    				newL1 = l1 - twopi
-    				if abs(newL1 - l0) < abs(l1 - l0):
-    					newLtr[:] = vertPts[1]
-    					newLtr[0] = newL1
-    					latLonElvPoints.InsertPoint(newLtr) # copy?
-    					numPts = latLonElvPoints.GetNumberOfPoints()
-    					# reset the point id
-    					ptIds.SetId(1, numPts - 1)
-
-
-
-
-
-    	return ugrid
-
 
     def save(self, filename):
         writer = vtk.vtkUnstructuredGridWriter()

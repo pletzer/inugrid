@@ -107,14 +107,14 @@ class FluxCalculator:
                 lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
                 lam2, the2 = self._getLambdaThetaFromXYZ(xyz2)
                 lam3, the3 = self._getLambdaThetaFromXYZ(xyz3)
-                print '\t--- cellId={} verts 0={} 1={} 2={} 3={}'.format(cellId, (lam0/numpy.pi, the0/numpy.pi), (lam1/numpy.pi, the1/numpy.pi), (lam2/numpy.pi, the2/numpy.pi), (lam3/numpy.pi, the3/numpy.pi),)
+                #print '\t--- cellId={} verts 0={} 1={} 2={} 3={}'.format(cellId, (lam0, the0), (lam1, the1), (lam2, the2), (lam3, the3),)
 
                 intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
                 # compute tBeg, tEnd, xiBeg and xiEnd
                 isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
                 if isIntersecting:
-                    print '\t\t... found intersection tBeg={} tEnd={} xiBeg={} xiEnd={}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd)
+                    #print '\t\t... found intersection tBeg={} tEnd={} xiBeg={} xiEnd={}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd)
 
                     basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
 
@@ -132,10 +132,11 @@ class FluxCalculator:
                         lam1, the1 = self._getLambdaThetaFromXYZ(xyz1)
 
                         # assumes counterclockwise orientation
-                        faceFlux = self.integralFunction(lam0, lam1, the0, the1)
+                        faceFlux = self.integralFunction(lam0, the0, lam1, the1)
 
                         # update the fluxes
                         flux += faceFlux * basisIntegrator(i0)
+                        #print '\t\t\tedge = ', i0, i1, ' face flux = ', faceFlux, ' integral of basis = ', basisIntegrator(i0), ' adding flux = ', faceFlux * basisIntegrator(i0)
 
                     # this prevents sub segments from assigning duplicate fluxes to different 
                     # cells when both tBeg and tEnd are the same
