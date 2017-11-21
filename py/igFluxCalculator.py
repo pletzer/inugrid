@@ -18,7 +18,7 @@ class FluxCalculator:
         """
         Constructor
         @param grid instance of vtkUnstructuredGrid
-        @param integralFunction function of (lam0, lam1, the0, the1)
+        @param integralFunction function of (lam0, the0, lam1, the1)
         """
     	self.grid = grid
         self.integralFunction = integralFunction
@@ -89,7 +89,7 @@ class FluxCalculator:
             lamA, theA = self._getLambdaThetaFromXYZ(xyzA)
             lamB, theB = self._getLambdaThetaFromXYZ(xyzB)
             intersector.setLine(lamA, theA, lamB, theB)
-            print '*** iSeg={} (lamA, theA)={} (lamB, theB)={}'.format(iSeg, (lamA, theA), (lamB, theB))
+            #print '*** iSeg={} (lamA, theA)={} (lamB, theB)={}'.format(iSeg, (lamA, theA), (lamB, theB))
 
             # (tBeg, tEnd): flux
             segment2Flux = {}
@@ -228,7 +228,7 @@ def psi(x, y):
     return math.sin(x)*math.cos(y)
 
 # define form
-def edgeIntegral(xa, xb, ya, yb):
+def edgeIntegral(xa, ya, xb, yb):
     """
     Compute the value attached to an edge
     x is longitude
