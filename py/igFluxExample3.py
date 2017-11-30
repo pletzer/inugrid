@@ -1,5 +1,6 @@
 from igFluxCalculator import FluxCalculator
 from igCubedSphere import CubedSphere
+from igPiecewiseLinearLine import PiecewiseLinearLine
 import numpy
 
 """
@@ -36,6 +37,7 @@ n = 20
 cs = CubedSphere(n)
 cs.save('cs.vtk')
 grid = cs.getUnstructuredGrid()
+cs.save('cubedSphereGrid.vtk')
 
 fc = FluxCalculator(grid, integralFunction)
 
@@ -54,6 +56,14 @@ the = 1.0 # 0.9* numpy.pi/2.
 # expression for the contour in lon-lat coordinates
 line = numpy.array([(lamMin + i*dx, the) for i in range(numSegments + 1)]).reshape(numSegments + 1, 2)
 fc.setLine(line)
+
+# for plotting
+def lamFunc(ts):
+    return lamMin + ts*(lamMax - lamMin)
+def theFunc(ts):
+    return the*numpy.ones((len(ts),), numpy.float64)
+pline = PiecewiseLinearLine(lamFunc, theFunc)
+pline.save('lineCubedSphere.vtk')
 
 # compute the flux
 totFlux = fc.computeFlux()
