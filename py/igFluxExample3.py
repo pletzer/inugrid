@@ -44,24 +44,24 @@ fc = FluxCalculator(grid, integralFunction)
 # number of contour segments
 numSegments = 100
 
-# start longitude 	
+# start longitude   
 lamMin, lamMax = 0.0, 0.3*2*numpy.pi
 
-# increment in lambda
-dx = (lamMax - lamMin) / numSegments
-
-# fixed latitude, close to the north pole
-the = 1.0 # 0.9* numpy.pi/2.
-
-# expression for the contour in lon-lat coordinates
-line = numpy.array([(lamMin + i*dx, the) for i in range(numSegments + 1)]).reshape(numSegments + 1, 2)
-fc.setLine(line)
-
-# for plotting
 def lamFunc(ts):
     return lamMin + ts*(lamMax - lamMin)
 def theFunc(ts):
+    the = 1.0
     return the*numpy.ones((len(ts),), numpy.float64)
+
+ts = numpy.linspace(0., 1., numSegments + 1)
+lams = lamFunc(ts)
+thes = theFunc(ts)
+
+# expression for the contour in lon-lat coordinates
+line = numpy.array([(lams[i], thes[i]) for i in range(numSegments + 1)]).reshape(numSegments + 1, 2)
+fc.setLine(line)
+
+# for plotting
 pline = PiecewiseLinearLine(lamFunc, theFunc)
 pline.save('lineCubedSphere.vtk')
 
@@ -70,6 +70,6 @@ totFlux = fc.computeFlux()
 
 print('Total flux: {}'.format(totFlux))
 exactFlux  = psi(line[-1][0], line[-1][1]) - psi(line[0][0], line[0][1])
-print('Exact flux: {}'.format(exactFlux))
+print('Exact flux: {} error = {}'.format(exactFlux, totFlux - exactFlux))
 #if hasattr(fc, 'polyline2Flux'): print('line 2 flux map: {}'.format(fc.polyline2Flux))
 
