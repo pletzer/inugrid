@@ -2,11 +2,17 @@ from igFluxCalculator import FluxCalculator
 from igCubedSphere import CubedSphere
 from igPiecewiseLinearLine import PiecewiseLinearLine
 import numpy
+import argparse
 
 """
 Example showing how to compute the flux across stream function grad lambda, 
 ie the 2-form is d lambda ^ dr.
 """
+
+parser = argparse.ArgumentParser(description="Compute the flux across a line on the cubed sphere")
+parser.add_argument('-n', type=int, default=20, help='Number of cells along each direction of a cubed-sphere tile')
+parser.add_argument('-s', type=int, default=100, help='Number of line segements')
+args = parser.parse_args()
 
 angle = 0.0 # 0.3 #numpy.pi/6.
 cos_angle = numpy.cos(angle)
@@ -33,7 +39,8 @@ def integralFunction(xa, ya, xb, yb):
     """
     return psi(xb, yb) - psi(xa, ya)
 
-n = 20
+# number of cells along each direction of one tile
+n = args.n
 cs = CubedSphere(n)
 cs.save('cs.vtk')
 grid = cs.getUnstructuredGrid()
@@ -42,7 +49,7 @@ cs.save('cubedSphereGrid.vtk')
 fc = FluxCalculator(grid, integralFunction)
 
 # number of contour segments
-numSegments = 100
+numSegments = args.s
 
 # start longitude   
 lamMin, lamMax = 0.0, 0.3*2*numpy.pi
