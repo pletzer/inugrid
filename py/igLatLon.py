@@ -32,7 +32,7 @@ class LatLon:
         self.xyz[:, 2] = radius*numpy.sin(llats)
 
         # compute the cell areas, enforce positiveness (not sure why all the areas are negative)
-        self.areas = igAreas.getCellAreas(self.xyz, n0=numLats1, n1=numLons1)
+        self.areas = -igAreas.getCellAreas(self.xyz, n0=numLats1, n1=numLons1)
         self.vareas = vtk.vtkDoubleArray()
         self.vareas.SetName('cell_areas')
         self.vareas.SetNumberOfComponents(1)
@@ -72,12 +72,32 @@ class LatLon:
 
 
     def show(self):
+
+        actors = []
+
         gridMapper = vtk.vtkDataSetMapper()
         gridMapper.SetInputData(self.grid)
 
+        data = self.grid.GetCellData().GetScalars()
+        if data:
+            lut = vtk.vtkLookupTable()
+            lut.SetHueRange(0., 0.666)
+            dmin, dmax = data.GetRange()
+            dmin = 0.0
+            lut.SetTableRange(dmin, dmax)
+            lut.Build()
+
+            cbar = vtk.vtkScalarBarActor()
+            cbar.SetLookupTable(lut)
+            actors.append(cbar)
+
+            gridMapper.SetLookupTable(lut)
+            gridMapper.SetUseLookupTableScalarRange(1)
+
         gridActor = vtk.vtkActor()
         gridActor.SetMapper(gridMapper)
-        gridActor.GetProperty().SetColor(93./255., 173./255., 226./255.)
+        #gridActor.GetProperty().SetColor(93./255., 173./255., 226./255.)
+        actors.append(gridActor)
 
         light = vtk.vtkLight()
         light.SetFocalPoint(0., 0., 0)
@@ -93,8 +113,10 @@ class LatLon:
         iren = vtk.vtkRenderWindowInteractor()
         iren.SetRenderWindow(renWin)
         # add the actors to the renderer, set the background and size
-        ren.AddActor(gridActor)
-        ren.AddLight(light)
+        # add the actors to the renderer, set the background and size
+        for a in actors:
+            ren.AddActor(a)
+        #ren.AddLight(light)
         ren.SetBackground(1, 1, 1)
         renWin.SetSize(640, 640)
         iren.Initialize()
@@ -104,11 +126,11 @@ class LatLon:
 
 #############################################################################
 def test():
-    numLat, numLon = 8, 16
+    numLat, numLon = 10, 20
     ll = LatLon(numLat, numLon)
     grid = ll.getUnstructuredGrid()
     ll.save('ll.vtk')
-    #ll.show()
+    ll.show()
 
 if __name__ == '__main__':
     test()
