@@ -1,14 +1,16 @@
 from igFluxCalculator import FluxCalculator
 from igCubedSphere import CubedSphere
 from igPiecewiseLinearLine import PiecewiseLinearLine
+from igNodalFunctionWriter import NodalFunctionWriter
 import numpy
+import math
 
 """
 Example showing how to compute the flux across stream function grad lambda, 
 ie the 2-form is d lambda ^ dr.
 """
 
-angle = 0.0 # 0.3 #numpy.pi/6.
+angle = 0.0 # numpy.pi/6.2324325
 cos_angle = numpy.cos(angle)
 sin_angle = numpy.sin(angle)
 
@@ -33,6 +35,13 @@ def integralFunction(xa, ya, xb, yb):
     """
     return psi(xb, yb) - psi(xa, ya)
 
+def streamFuncExact(xyz, *args):
+    x, y, z = xyz
+    rho = math.sqrt(x**2 + y**2)
+    the = math.atan2(z, rho)
+    lam = math.atan2(y, x)
+    return psi(lam, the)
+
 n = 20
 cs = CubedSphere(n)
 cs.save('cs.vtk')
@@ -42,16 +51,15 @@ cs.save('cubedSphereGrid.vtk')
 fc = FluxCalculator(grid, integralFunction)
 
 # number of contour segments
-numSegments = 100
+numSegments = 1 #100
 
-# start longitude   
-lamMin, lamMax = 0.0, 0.3*2*numpy.pi
+lamCentre, theCentre = numpy.pi/4., numpy.pi/4.
+radius = 0.2
 
 def lamFunc(ts):
-    return lamMin + ts*(lamMax - lamMin)
+    return lamCentre + radius*numpy.cos(5*numpy.pi/3.*ts - 0.2)
 def theFunc(ts):
-    the = 1.0
-    return the*numpy.ones((len(ts),), numpy.float64)
+    return theCentre + radius*numpy.sin(5*numpy.pi/3.*ts - 0.2)
 
 ts = numpy.linspace(0., 1., numSegments + 1)
 lams = lamFunc(ts)
@@ -63,7 +71,7 @@ fc.setLine(line)
 
 # for plotting
 pline = PiecewiseLinearLine(lamFunc, theFunc)
-pline.save('lineCubedSphere3.vtk')
+pline.save('lineCubedSphere4.vtk')
 
 # compute the flux
 totFlux = fc.computeFlux()
@@ -71,5 +79,9 @@ totFlux = fc.computeFlux()
 print('Total flux: {}'.format(totFlux))
 exactFlux  = psi(line[-1][0], line[-1][1]) - psi(line[0][0], line[0][1])
 print('Exact flux: {} error = {}'.format(exactFlux, totFlux - exactFlux))
-#if hasattr(fc, 'polyline2Flux'): print('line 2 flux map: {}'.format(fc.polyline2Flux))
+
+# write stream function
+dataWriter = NodalFunctionWriter(grid, streamFuncExact, name='psi')
+dataWriter.save('psiCubedSphere.vtk')
+
 
