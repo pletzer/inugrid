@@ -130,7 +130,7 @@ class CubedSphere:
 
             cbar = vtk.vtkScalarBarActor()
             cbar.SetLookupTable(lut)
-            actors.append(cbar)
+            #actors.append(cbar)
 
             gridMapper.SetLookupTable(lut)
             gridMapper.SetUseLookupTableScalarRange(1)
