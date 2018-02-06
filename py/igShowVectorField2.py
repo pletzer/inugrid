@@ -85,6 +85,8 @@ glyph.Update()
 
 glyphMapper = vtk.vtkPolyDataMapper()
 glyphMapper.SetInputConnection(glyph.GetOutputPort())
+glyphMapper.SetUseLookupTableScalarRange(1)
+
 
 lut = glyphMapper.GetLookupTable()
 lut.SetHueRange(0.667, 0.)

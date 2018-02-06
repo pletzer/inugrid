@@ -84,6 +84,8 @@ for cellId in range(numCells):
 
 numEdges = len(ptIdEdges2Val)
 
+actors = []
+
 # create the edges
 edges = vtk.vtkCellArray()
 edges.Allocate(numEdges)
@@ -112,19 +114,37 @@ writer.SetFileName('edges.vtk')
 writer.SetInputData(poly)
 writer.Update()
 
-# show
-mapper = vtk.vtkPolyDataMapper()
-mapper.SetInputData(poly)
-poly.GetCellData().SetActiveScalars('1-form')
-lut = mapper.GetLookupTable()
+lut = vtk.vtkLookupTable()
 dmin, dmax = values.GetRange()
+lut.SetHueRange(0.667, 0.)
+lut.SetRange(dmin, dmax)
+lut.Build()
+
+# show
+tube = vtk.vtkTubeFilter()
+tube.SetInputData(poly)
+tube.SetRadius(0.02)
+tube.SetNumberOfSides(5)
+tube.Update()
+tubeMapper = vtk.vtkPolyDataMapper()
+tubeMapper.SetInputConnection(tube.GetOutputPort())
+tubeMapper.SetLookupTable(lut)
+tubeMapper.SetUseLookupTableScalarRange(1)
+tubeMapper.ScalarVisibilityOn()
+tubeActor = vtk.vtkActor()
+tubeActor.SetMapper(tubeMapper)
+actors.append(tubeActor)
+
+mapper = vtk.vtkPolyDataMapper()
+mapper.SetInputConnection(tube.GetOutputPort())
+mapper.SetInputData(poly)
+mapper.SetLookupTable(lut)
+poly.GetCellData().SetActiveScalars('1-form')
 mapper.SetUseLookupTableScalarRange(1)
-lut.SetTableRange(dmin, dmax)
-lut.SetHueRange(0.666, 0.)
 actor = vtk.vtkActor()
 actor.SetMapper(mapper)
 
-actors = [actor]
+actors.append(actor)
 
 # add sphere
 sphereSource = vtk.vtkSphereSource()
