@@ -42,7 +42,7 @@ def getLambdaTheta(point):
 
 
 # resolution of cubed-sphere 
-n = 10
+n = 20
 
 cs = igCubedSphere.CubedSphere(n, radius=1.01)
 grid = cs.getUnstructuredGrid()
@@ -90,6 +90,7 @@ edges.Allocate(numEdges)
 values = vtk.vtkDoubleArray()
 values.SetNumberOfComponents(1)
 values.SetNumberOfTuples(numEdges)
+values.SetName('1-form')
 ptIds = vtk.vtkIdList()
 ptIds.SetNumberOfIds(2) # probably not needed
 index = 0
@@ -97,18 +98,41 @@ for e01, val in ptIdEdges2Val.items():
     ptIds.SetId(0, e01[0])
     ptIds.SetId(1, e01[1])
     edges.InsertNextCell(ptIds)
-    values.SetTuple(index, val)
+    values.SetTuple(index, [val,])
     index += 1
 
 poly = vtk.vtkPolyData() # may need to allocate?
 poly.SetPoints(points)
 poly.SetLines(edges)
-poly.Build()
+poly.GetCellData().AddArray(values)
 
 # write to file
 writer = vtk.vtkPolyDataWriter()
 writer.SetFileName('edges.vtk')
 writer.SetInputData(poly)
 writer.Update()
+
+# show
+mapper = vtk.vtkPolyDataMapper()
+mapper.SetInputData(poly)
+actor = vtk.vtkActor()
+actor.SetMapper(mapper)
+
+actors = [actor]
+
+ren = vtk.vtkRenderer()
+renWin = vtk.vtkRenderWindow()
+iren = vtk.vtkRenderWindowInteractor()
+renWin.AddRenderer(ren)
+iren.SetRenderWindow(renWin)
+for a in actors:
+    ren.AddActor(a)
+
+ren.SetBackground(0.2, 0.2, 0.2)
+renWin.SetSize(900, 600)
+iren.Initialize()
+renWin.Render()
+iren.Start()
+
 
 
