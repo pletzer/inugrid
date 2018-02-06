@@ -13,7 +13,7 @@ phi = (1 - alpha sin(lambda)) * cos(theta)
 
 
 EPS = 1.e-14
-M = 3
+M = 2
 N = 1
 
 
@@ -115,10 +115,35 @@ writer.Update()
 # show
 mapper = vtk.vtkPolyDataMapper()
 mapper.SetInputData(poly)
+poly.GetCellData().SetActiveScalars('1-form')
+lut = mapper.GetLookupTable()
+dmin, dmax = values.GetRange()
+mapper.SetUseLookupTableScalarRange(1)
+lut.SetTableRange(dmin, dmax)
+lut.SetHueRange(0.666, 0.)
 actor = vtk.vtkActor()
 actor.SetMapper(mapper)
 
 actors = [actor]
+
+# add sphere
+sphereSource = vtk.vtkSphereSource()
+sphereSource.SetRadius(1.0)
+sphereSource.SetThetaResolution(128)
+sphereSource.SetPhiResolution(64)
+sphereMapper = vtk.vtkPolyDataMapper()
+sphereMapper.SetInputConnection(sphereSource.GetOutputPort())
+sphereActor = vtk.vtkActor()
+sphereActor.SetMapper(sphereMapper)
+sphereActor.GetProperty().SetColor(0., 0., 0.)
+actors.append(sphereActor)
+
+# add color bar
+colorbar = vtk.vtkScalarBarActor()
+colorbar.SetLookupTable(lut)
+colorbar.SetTitle(values.GetName())
+colorbar.GetLabelTextProperty().SetFontSize(14)
+#actors.append(colorbar)
 
 ren = vtk.vtkRenderer()
 renWin = vtk.vtkRenderWindow()
@@ -128,8 +153,13 @@ iren.SetRenderWindow(renWin)
 for a in actors:
     ren.AddActor(a)
 
-ren.SetBackground(0.2, 0.2, 0.2)
-renWin.SetSize(900, 600)
+camera = vtk.vtkCamera()
+camera.SetPosition(0., -4., 1.)
+camera.SetFocalPoint(0., 0., 0.)
+ren.SetActiveCamera(camera)
+
+ren.SetBackground(1., 1., 1.)
+renWin.SetSize(600, 600)
 iren.Initialize()
 renWin.Render()
 iren.Start()
