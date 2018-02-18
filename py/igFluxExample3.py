@@ -75,6 +75,7 @@ pline.save('lineCubedSphere.vtk')
 # compute the flux
 totFlux = fc.computeFlux()
 
+print('Number of cells: {}'.format(grid.GetNumberOfCells()))
 print('Total flux: {}'.format(totFlux))
 exactFlux  = psi(line[-1][0], line[-1][1]) - psi(line[0][0], line[0][1])
 print('Exact flux: {} error = {}'.format(exactFlux, totFlux - exactFlux))

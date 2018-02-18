@@ -108,7 +108,7 @@ def test():
     ll = LatLon(numLat, numLon)
     grid = ll.getUnstructuredGrid()
     ll.save('ll.vtk')
-    #ll.show()
+    ll.show()
 
 if __name__ == '__main__':
     test()
