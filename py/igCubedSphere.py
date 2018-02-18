@@ -72,7 +72,7 @@ class CubedSphere:
 
                 ntot = numPointsPerTile**2
 
-                # create the VTK unstructired grid
+                # create the VTK unstructured grid by combining the structured grids
                 tileXyz = vtk.vtkDoubleArray()
                 tileXyz.SetNumberOfComponents(3)
                 tileXyz.SetNumberOfTuples(ntot)
@@ -97,7 +97,7 @@ class CubedSphere:
                 self.tileAreaList.append(tileAreas)
 
         self.appendGrids.Update()
-        self.grid = self.appendGrids.GetOutput()
+        self.grid = self.appendGrids.GetOutput() # returns unstructured grid
 
 
     def getUnstructuredGrid(self):
@@ -121,18 +121,19 @@ class CubedSphere:
         data = self.grid.GetCellData().GetScalars()
         if data:
             lut = vtk.vtkLookupTable()
-            lut.SetHueRange(0.666, 0.)
+            lut.SetHueRange(0., 0.666)
             dmin, dmax = data.GetRange()
+            # reset the colour scale min to map to area 0
+            dmin = 0.0
             lut.SetTableRange(dmin, dmax)
             lut.Build()
 
             cbar = vtk.vtkScalarBarActor()
             cbar.SetLookupTable(lut)
-            actors.append(cbar)
+            #actors.append(cbar)
 
             gridMapper.SetLookupTable(lut)
             gridMapper.SetUseLookupTableScalarRange(1)
-
 
         gridActor = vtk.vtkActor()
         gridActor.SetMapper(gridMapper)
@@ -193,7 +194,7 @@ class CubedSphere:
 
 #############################################################################
 def test():
-    numCells = 5
+    numCells = 8
     cs = CubedSphere(numCells)
     grid = cs.getUnstructuredGrid()
     cs.save('cs.vtk')
