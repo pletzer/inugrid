@@ -3,8 +3,10 @@ pylab.rcParams['font.size'] = 20
 
 import numpy
 
-numCells = numpy.array([24, 96, 600, 2400, 15000, 60000])
-error = numpy.array([-0.35, -0.11, -6.9e-4, -4.6e-4, -3.3e-4, -1.2e-4])
+# 20 segements
+
+numCells = numpy.array([24, 150, 600, 2400, 15000, 60000, 240000,])
+error = numpy.array([0.11, 0.014, 0.0043, 4.4e-5, 1.8e-4, 1.2e-5, 5.5e-6])
 
 pylab.loglog(numCells, abs(error), 'o', markeredgecolor='k', markerfacecolor='w')
 pylab.loglog(numCells, abs(error), 'b-')
