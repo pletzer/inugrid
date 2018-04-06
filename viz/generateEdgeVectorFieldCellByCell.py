@@ -17,7 +17,7 @@ tmin, tmax = 0., 2.*numpy.pi
 dr, dt = (rmax - rmin)/float(nr), (tmax - tmin)/float(nt)
 
 def psiFunc(r, t):
-	return t
+	return t + 0.1*r*math.cos(t)
 
 def gradXi1(x, y, z):
 	r = math.sqrt(x*x + y*y)
