@@ -16,9 +16,8 @@ tmin, tmax = 0., 2.*numpy.pi
 
 dr, dt = (rmax - rmin)/float(nr), (tmax - tmin)/float(nt)
 
-def psiFunc(x, y, z):
-	theta = math.atan2(y, x)
-	return theta
+def psiFunc(r, t):
+	return t
 
 def gradXi1(x, y, z):
 	r = math.sqrt(x*x + y*y)
@@ -58,10 +57,10 @@ for i in range(nr):
 		x11, y11 = r1*numpy.cos(t1), r1*numpy.sin(t1)
 		x01, y01 = r0*numpy.cos(t1), r0*numpy.sin(t1)
 
-		psi00 = psiFunc(x00, y00, z)
-		psi10 = psiFunc(x10, y10, z)
-		psi11 = psiFunc(x11, y11, z)
-		psi01 = psiFunc(x01, y01, z)
+		psi00 = psiFunc(r0, t0)
+		psi10 = psiFunc(r1, t0)
+		psi11 = psiFunc(r1, t1)
+		psi01 = psiFunc(r0, t1)
 
 		# field values on the edges
 		vs0 = psi10 - psi00 # bottom
