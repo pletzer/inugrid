@@ -32,11 +32,12 @@ def gradXi2(x, y, z):
 nr1, nt1 = nr + 1, nt + 1
 
 # build the points and the field
-# 4 points per cell
+# vector field is cell centred
+# potential is nodal 
 points.SetNumberOfPoints(nr * nt * 4)
 
 vecData.SetNumberOfComponents(3)
-vecData.SetNumberOfTuples(nr * nt * 4)
+vecData.SetNumberOfTuples(nr * nt)
 vecData.SetName('velocity')
 
 psiData.SetNumberOfComponents(1)
@@ -45,6 +46,7 @@ psiData.SetName('potential')
 
 z = 0. # on z = 0 plane (2D)
 k = 0
+kCell = 0
 for i in range(nr):
 	r0 = rmin + i*dr
 	r1 = r0 + dr
@@ -68,25 +70,31 @@ for i in range(nr):
 		v0s = psi01 - psi00 # left
 		v1s = psi11 - psi10 # right
 
+		v00 = vs0*gradXi1(x00, y00, z) + v0s*gradXi2(x00, y00, z)
+		v10 = vs0*gradXi1(x10, y10, z) + v1s*gradXi2(x10, y10, z)
+		v11 = vs1*gradXi1(x11, y11, z) + v1s*gradXi2(x11, y11, z)
+		v01 = vs1*gradXi1(x01, y01, z) + v0s*gradXi2(x01, y01, z)
+
 		points.InsertPoint(k, (x00, y00, z))
-		vecData.SetTuple(k, vs0*gradXi1(x00, y00, z) + v0s*gradXi2(x00, y00, z))
 		psiData.SetTuple(k, [psi00])
 		k += 1
 
 		points.InsertPoint(k, (x10, y10, z))
-		vecData.SetTuple(k, vs0*gradXi1(x10, y10, z) + v1s*gradXi2(x10, y10, z))
 		psiData.SetTuple(k, [psi10])
 		k += 1
 
 		points.InsertPoint(k, (x11, y11, z))
-		vecData.SetTuple(k, vs1*gradXi1(x11, y11, z) + v1s*gradXi2(x11, y11, z))
 		psiData.SetTuple(k, [psi11])
 		k += 1
 
 		points.InsertPoint(k, (x01, y01, z))
-		vecData.SetTuple(k, vs1*gradXi1(x01, y01, z) + v0s*gradXi2(x01, y01, z))
 		psiData.SetTuple(k, [psi01])
 		k += 1
+
+		# set the vector field by averaging the nodal field values
+		vCell = 0.25*(v00 + v10 + v11 + v01)
+		vecData.SetTuple(kCell, vCell)
+		kCell += 1
 
 # build the grid
 numCells = nr * nt
@@ -104,11 +112,11 @@ for i in range(nr):
 		grid.InsertNextCell(vtk.VTK_QUAD, ptIds)
 
 grid.SetPoints(points)
-grid.GetPointData().AddArray(vecData)
+grid.GetCellData().AddArray(vecData)
 grid.GetPointData().AddArray(psiData)
 
 
 # save to file
 writer.SetInputData(grid)
-writer.SetFileName('edgeVectorCellByCell.vtk')
+writer.SetFileName('avgCellVectorCellByCell.vtk')
 writer.Update()
