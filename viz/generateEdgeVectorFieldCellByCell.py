@@ -4,13 +4,14 @@ import math
 
 
 points = vtk.vtkPoints()
-data = vtk.vtkDoubleArray()
+vecData = vtk.vtkDoubleArray()
+psiData = vtk.vtkDoubleArray()
 grid = vtk.vtkUnstructuredGrid()
 writer = vtk.vtkUnstructuredGridWriter()
 
 # number of cells (radial, poloidal)
-nr, nt = 5, 12
-rmin, rmax = 1.e-6, 2.
+nr, nt = 10, 32
+rmin, rmax = 0.01, 2.
 tmin, tmax = 0., 2.*numpy.pi
 
 dr, dt = (rmax - rmin)/float(nr), (tmax - tmin)/float(nt)
@@ -34,8 +35,14 @@ nr1, nt1 = nr + 1, nt + 1
 # build the points and the field
 # 4 points per cell
 points.SetNumberOfPoints(nr * nt * 4)
-data.SetNumberOfComponents(3)
-data.SetNumberOfTuples(nr * nt * 4)
+
+vecData.SetNumberOfComponents(3)
+vecData.SetNumberOfTuples(nr * nt * 4)
+vecData.SetName('velocity')
+
+psiData.SetNumberOfComponents(1)
+psiData.SetNumberOfTuples(nr * nt * 4)
+psiData.SetName('potential')
 
 z = 0. # on z = 0 plane (2D)
 k = 0
@@ -51,26 +58,35 @@ for i in range(nr):
 		x11, y11 = r1*numpy.cos(t1), r1*numpy.sin(t1)
 		x01, y01 = r0*numpy.cos(t1), r0*numpy.sin(t1)
 
+		psi00 = psiFunc(x00, y00, z)
+		psi10 = psiFunc(x10, y10, z)
+		psi11 = psiFunc(x11, y11, z)
+		psi01 = psiFunc(x01, y01, z)
+
 		# field values on the edges
-		vs0 = psiFunc(x10, y10, z) - psiFunc(x00, y00, z)
-		vs1 = psiFunc(x11, y11, z) - psiFunc(x01, y01, z)
-		v0s = psiFunc(x01, y01, z) - psiFunc(x00, y00, z)
-		v1s = psiFunc(x11, y11, z) - psiFunc(x10, y10, z)
+		vs0 = psi10 - psi00 # bottom
+		vs1 = psi11 - psi01 # top
+		v0s = psi01 - psi00 # left
+		v1s = psi11 - psi10 # right
 
 		points.InsertPoint(k, (x00, y00, z))
-		data.SetTuple(k, vs0*gradXi1(x00, y00, z) + v0s*gradXi2(x00, y00, z))
+		vecData.SetTuple(k, vs0*gradXi1(x00, y00, z) + v0s*gradXi2(x00, y00, z))
+		psiData.SetTuple(k, [psi00])
 		k += 1
 
 		points.InsertPoint(k, (x10, y10, z))
-		data.SetTuple(k, vs0*gradXi1(x10, y10, z) + v1s*gradXi2(x10, y10, z))
+		vecData.SetTuple(k, vs0*gradXi1(x10, y10, z) + v1s*gradXi2(x10, y10, z))
+		psiData.SetTuple(k, [psi10])
 		k += 1
 
 		points.InsertPoint(k, (x11, y11, z))
-		data.SetTuple(k, vs1*gradXi1(x11, y11, z) + v1s*gradXi2(x11, y11, z))
+		vecData.SetTuple(k, vs1*gradXi1(x11, y11, z) + v1s*gradXi2(x11, y11, z))
+		psiData.SetTuple(k, [psi11])
 		k += 1
 
 		points.InsertPoint(k, (x01, y01, z))
-		data.SetTuple(k, vs1*gradXi1(x01, y01, z) + v0s*gradXi2(x01, y01, z))
+		vecData.SetTuple(k, vs1*gradXi1(x01, y01, z) + v0s*gradXi2(x01, y01, z))
+		psiData.SetTuple(k, [psi01])
 		k += 1
 
 # build the grid
@@ -89,7 +105,8 @@ for i in range(nr):
 		grid.InsertNextCell(vtk.VTK_QUAD, ptIds)
 
 grid.SetPoints(points)
-grid.GetPointData().SetScalars(data)
+grid.GetPointData().AddArray(vecData)
+grid.GetPointData().AddArray(psiData)
 
 
 # save to file
