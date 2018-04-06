@@ -170,9 +170,10 @@ class FluxCalculator:
                     currentTEnd = tBeg
 
             try:
-        	   assert abs(1.0 - totalT) < 100*self.EPS
+        	   assert abs(1.0 - totalT) < 1000*self.EPS
             except:
-        	   print('ERROR the integrated parametric coordinate "t" for segment {} amounts to {} != 1'.format(iSeg, totalT))
+        	   print('ERROR the integrated parametric coordinate "t" for segment {} amounts to {} != 1 (diff {})'.format(\
+                     iSeg, totalT, 1. - totalT))
         	   print('      This indicates that some segments are not properly accounted for.')
         	   print('      segment2Flux = {}'.format(segment2Flux))
         	   raise RuntimeError, 'FATAL'

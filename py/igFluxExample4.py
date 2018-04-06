@@ -4,11 +4,20 @@ from igPiecewiseLinearLine import PiecewiseLinearLine
 from igNodalFunctionWriter import NodalFunctionWriter
 import numpy
 import math
+import argparse
 
 """
 Example showing how to compute the flux across stream function grad lambda, 
 ie the 2-form is d lambda ^ dr.
+
+Path is fraction of a circle.
 """
+
+parser = argparse.ArgumentParser(description="Compute the flux across a line on the cubed sphere")
+parser.add_argument('-n', type=int, default=20, help='Number of cells along each direction of a cubed-sphere tile')
+parser.add_argument('-s', type=int, default=100, help='Number of line segements')
+args = parser.parse_args()
+
 
 angle = 0.0 # numpy.pi/6.2324325
 cos_angle = numpy.cos(angle)
@@ -42,7 +51,7 @@ def streamFuncExact(xyz, *args):
     lam = math.atan2(y, x)
     return psi(lam, the)
 
-n = 20
+n = args.n
 cs = CubedSphere(n)
 cs.save('cs.vtk')
 grid = cs.getUnstructuredGrid()
@@ -51,7 +60,7 @@ cs.save('cubedSphereGrid.vtk')
 fc = FluxCalculator(grid, integralFunction)
 
 # number of contour segments
-numSegments = 1 #100
+numSegments = args.s
 
 lamCentre, theCentre = numpy.pi/4., numpy.pi/4.
 radius = 0.2
@@ -76,6 +85,7 @@ pline.save('lineCubedSphere4.vtk')
 # compute the flux
 totFlux = fc.computeFlux()
 
+print('Number of cells: {}'.format(grid.GetNumberOfCells()))
 print('Total flux: {}'.format(totFlux))
 exactFlux  = psi(line[-1][0], line[-1][1]) - psi(line[0][0], line[0][1])
 print('Exact flux: {} error = {}'.format(exactFlux, totFlux - exactFlux))

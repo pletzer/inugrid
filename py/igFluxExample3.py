@@ -7,6 +7,8 @@ import argparse
 """
 Example showing how to compute the flux across stream function grad lambda, 
 ie the 2-form is d lambda ^ dr.
+
+Path is a straight line
 """
 
 parser = argparse.ArgumentParser(description="Compute the flux across a line on the cubed sphere")
