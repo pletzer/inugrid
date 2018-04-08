@@ -7,6 +7,8 @@ points = vtk.vtkPoints()
 vecData = vtk.vtkDoubleArray()
 vecDataExact = vtk.vtkDoubleArray()
 vecDataAvgCell = vtk.vtkDoubleArray()
+vecDataAvgCellSimple = vtk.vtkDoubleArray()
+vecDataCellExact = vtk.vtkDoubleArray()
 psiData = vtk.vtkDoubleArray()
 grid = vtk.vtkUnstructuredGrid()
 writer = vtk.vtkUnstructuredGridWriter()
@@ -61,6 +63,14 @@ vecDataExact.SetName('velocityExact')
 vecDataAvgCell.SetNumberOfComponents(3)
 vecDataAvgCell.SetNumberOfTuples(nr * nt)
 vecDataAvgCell.SetName('velocityAvgCell')
+
+vecDataAvgCellSimple.SetNumberOfComponents(3)
+vecDataAvgCellSimple.SetNumberOfTuples(nr * nt)
+vecDataAvgCellSimple.SetName('velocityAvgCellSimple')
+
+vecDataCellExact.SetNumberOfComponents(3)
+vecDataCellExact.SetNumberOfTuples(nr * nt)
+vecDataCellExact.SetName('velocityCellExact')
 
 psiData.SetNumberOfComponents(1)
 psiData.SetNumberOfTuples(nr * nt * 4)
@@ -133,14 +143,29 @@ for i in range(nr):
 		xCell = 0.25*(x00 + x10 + x11 + x01)
 		yCell = 0.25*(y00 + y10 + y11 + y01)
 
+		# correct way of averaging the field to cell centres		
+		# average of the west/east edge fields. Edge length is r*dt
+		rMid = 0.5*(r0 + r1)
+		vAvgCell = 0.5*(vs0 + vs1)*rHat(xCell, yCell, z) / dr
+		vAvgCell += 0.5*(v0s + v1s)*tHat(xCell, yCell, z) / (rMid * dt)
+		vecDataAvgCell.SetTuple(kCell, vAvgCell)
+
 		# average of the north/south edge fields. Note: vs0 and vs1 are the 
 		# line integrals of the field over the edge so need to divide
 		# by the edge length (dr)
-		vAvgCell = 0.5*(vs0/dr + vs1/dr)*rHat(xCell, yCell, z)
+		vAvgCellSimple = 0.5*(vs0/dr + vs1/dr)*rHat(xCell, yCell, z)
 		# average of the west/east edge fields. Edge length is r*dt
-		vAvgCell += 0.5*(v0s/(r0*dt) + v1s/(r1*dt))*tHat(xCell, yCell, z)
+		vAvgCellSimple += 0.5*(v0s/(r0*dt) + v1s/(r1*dt))*tHat(xCell, yCell, z)
+		vecDataAvgCellSimple.SetTuple(kCell, vAvgCellSimple)
 
-		vecDataAvgCell.SetTuple(kCell, vAvgCell)
+		# cell centred exact
+		tMid = 0.5*(t0 + t1)
+		xMid = 0.25*(x00 + x10 + x11 + x01)
+		yMid = 0.25*(y00 + y10 + y11 + y01)
+		vCellExact = dPsiDr(rMid, tMid)*rHat(xMid, yMid, z) + dPsiDtOverR(rMid, tMid)*tHat(xMid, yMid, z)
+		vecDataCellExact.SetTuple(kCell, vCellExact)
+
+
 		kCell += 1
 
 # build the grid
@@ -162,6 +187,8 @@ grid.SetPoints(points)
 grid.GetPointData().AddArray(vecData)
 grid.GetPointData().AddArray(vecDataExact)
 grid.GetCellData().AddArray(vecDataAvgCell)
+grid.GetCellData().AddArray(vecDataAvgCellSimple)
+grid.GetCellData().AddArray(vecDataCellExact)
 grid.GetPointData().AddArray(psiData)
 
 
