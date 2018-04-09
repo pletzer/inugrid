@@ -134,7 +134,7 @@ class LatLon:
 
 #############################################################################
 def test():
-    numLat, numLon = 10, 20
+    numLat, numLon = 2, 4
     ll = LatLon(numLat, numLon)
     grid = ll.getUnstructuredGrid()
     ll.save('ll.vtk')
