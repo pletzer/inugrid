@@ -4,9 +4,9 @@ import igAreas
 
 class LatLon:
 
-    def __init__(self, numLats, numLons, radius=1.0):
+    def __init__(self, numLats, numLons, radius=1.0, coords='cartesian'):
 
-        # this is tp convert from structured to unstructured grid
+        # this is to convert from structured to unstructured grid
         self.appendGrids = vtk.vtkAppendFilter()
 
         # create grid
@@ -24,12 +24,19 @@ class LatLon:
         llats = llats.flat
         llons = llons.flat
 
-        # coordinates
         self.xyz = numpy.zeros((numLats1*numLons1, 3), numpy.float64)
         rrho = radius*numpy.cos(llats)
         self.xyz[:, 0] = rrho*numpy.cos(llons)
         self.xyz[:, 1] = rrho*numpy.sin(llons)
         self.xyz[:, 2] = radius*numpy.sin(llats)
+
+        # coordinates
+        self.pointArray = self.xyz
+
+        if coords == 'spherical':
+            self.pointArray[:, 0] = llons
+            self.pointArray[:, 1] = llats
+            self.pointArray[:, 0] = 0.0
 
         # compute the cell areas, enforce positiveness (not sure why all the areas are negative)
         self.areas = -igAreas.getCellAreas(self.xyz, n0=numLats1, n1=numLons1)
@@ -44,7 +51,7 @@ class LatLon:
         self.vxyz.SetNumberOfComponents(3)
         ntot = numLats1 * numLons1
         self.vxyz.SetNumberOfTuples(ntot)
-        self.vxyz.SetVoidArray(self.xyz, 3*ntot, 1)
+        self.vxyz.SetVoidArray(self.pointArray, 3*ntot, 1)
 
         self.pts = vtk.vtkPoints()
         self.pts.SetNumberOfPoints(ntot)
@@ -59,6 +66,7 @@ class LatLon:
         self.appendGrids.AddInputData(self.sgrid)
         self.appendGrids.Update()
         self.grid = self.appendGrids.GetOutput()
+
 
     def getUnstructuredGrid(self):
         return self.grid

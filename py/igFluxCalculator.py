@@ -189,7 +189,7 @@ class FluxCalculator:
         @param xyz1 ending point
         @return list of cells
         """
-    	cellIds = vtk.vtkIdList()
+        cellIds = vtk.vtkIdList()
         tol = 1.e-3
         self.cellLoc.FindCellsAlongLine(xyz0, xyz1, tol, cellIds)
         numCells = cellIds.GetNumberOfIds()
