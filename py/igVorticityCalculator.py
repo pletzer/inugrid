@@ -99,7 +99,7 @@ class VorticityCalculator:
                 lam2, the2 = lt2[:2]
                 lam3, the3 = lt3[:2]
 
-                intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
+                intersector.setSphericalCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
                 # compute tBeg, tEnd, xiBeg and xiEnd
                 isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
@@ -207,9 +207,11 @@ def testPole():
     from igLatLon import LatLon
 
     # create grid
-    nlat, nlon = 10, 20
-    grd = LatLon(numLats=nlat, numLons=nlon, radius=1.0, 
-                  coords='spherical').getUnstructuredGrid()
+    nlat, nlon = 2, 4
+    sphere = LatLon(numLats=nlat, numLons=nlon, radius=1.0, 
+                  coords='spherical')
+    sphere.save('testPole.vtk')
+    grd = sphere.getUnstructuredGrid()
 
     # compute vorticity
     vort = VorticityCalculator(grd, edgeIntegral)

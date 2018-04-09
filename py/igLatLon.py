@@ -36,7 +36,7 @@ class LatLon:
         if coords == 'spherical':
             self.pointArray[:, 0] = llons
             self.pointArray[:, 1] = llats
-            self.pointArray[:, 0] = 0.0
+            self.pointArray[:, 2] = 0.0
 
         # compute the cell areas, enforce positiveness (not sure why all the areas are negative)
         self.areas = -igAreas.getCellAreas(self.xyz, n0=numLats1, n1=numLons1)

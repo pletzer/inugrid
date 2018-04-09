@@ -49,6 +49,32 @@ class CellLineIntersector:
         self.pA = self._getXYZ(lamA, theA)
         self.pB = self._getXYZ(lamB, theB)
 
+    def setSphericalCell(self, lam0, the0, lam1, the1, lam2, the2, lam3, the3):
+        """
+        Set the cell vertices
+        @param lam0 longitude vertex
+        @param the0 latitude vertex
+        @param lam1 longitude vertex
+        @param the1 latitude vertex
+        @param lam2 longitude vertex
+        @param the2 latitude vertex
+        @param lam3 longitude vertex
+        @param the3 latitude vertex
+        """
+
+        # lower level
+        self.pts.InsertPoint(0, (lam0, the0, -1.))
+        self.pts.InsertPoint(1, (lam1, the1, -1.))
+        self.pts.InsertPoint(2, (lam2, the2, -1.))
+        self.pts.InsertPoint(3, (lam3, the3, -1.))
+
+        # upper level
+        self.pts.InsertPoint(4, (lam0, the0, 1.))
+        self.pts.InsertPoint(5, (lam1, the1, 1.))
+        self.pts.InsertPoint(6, (lam2, the2, 1.))
+        self.pts.InsertPoint(7, (lam3, the3, 1.))
+
+
     def setCell(self, lam0, the0, lam1, the1, lam2, the2, lam3, the3):
         """
         Set the cell vertices
