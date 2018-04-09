@@ -15,15 +15,10 @@ class LatLon:
         lons = numpy.linspace(0., 2*numpy.pi, numLons1)
         llons, llats = numpy.meshgrid(lons, lats)
 
-        # add a tiny perturbation  to avoid issues with computing
-        # fluxes
-        #eps = 1.e-3
-        #llons += eps*numpy.cos(llats)*numpy.sin(llons)
-        #llats += eps*numpy.cos(llats)*numpy.sin(llons)
-
         llats = llats.flat
         llons = llons.flat
 
+        # vertices in Cartesian space
         self.xyz = numpy.zeros((numLats1*numLons1, 3), numpy.float64)
         rrho = radius*numpy.cos(llats)
         self.xyz[:, 0] = rrho*numpy.cos(llons)
@@ -32,7 +27,6 @@ class LatLon:
 
         # coordinates
         self.pointArray = self.xyz
-
         if coords == 'spherical':
             self.pointArray[:, 0] = llons
             self.pointArray[:, 1] = llats
@@ -135,7 +129,7 @@ class LatLon:
 #############################################################################
 def test():
     numLat, numLon = 2, 4
-    ll = LatLon(numLat, numLon)
+    ll = LatLon(numLat, numLon, coords='spherical')
     grid = ll.getUnstructuredGrid()
     ll.save('ll.vtk')
     ll.show()

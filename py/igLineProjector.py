@@ -5,9 +5,9 @@ from igBasisFunctionIntegral import BasisFunctionIntegral
 from igCellLineIntersector import CellLineIntersector
 
 
-class VorticityCalculator:
+class LineProjector:
     """
-    Class to compute the vorticity over a closed loop 
+    Class to compute the projection of a 1-form onto a target line
     """
 
     # to handle floating point comparisons
@@ -18,7 +18,8 @@ class VorticityCalculator:
         """
         Constructor
         @param grid instance of vtkUnstructuredGrid
-        @param integralFunction function of (lam0, the0, lam1, the1)
+        @param integralFunction function of (lam0, the0, lam1, the1) 
+                                used to set the edge values
         """
         self.grid = grid
         self.integralFunction = integralFunction
@@ -214,7 +215,7 @@ def testPole():
     grd = sphere.getUnstructuredGrid()
 
     # compute vorticity
-    vort = VorticityCalculator(grd, edgeIntegral)
+    vort = LineProjector(grd, edgeIntegral)
 
     lamA, theA =      0.0, math.pi/5.
     lamB, theB =  math.pi, math.pi/5.
