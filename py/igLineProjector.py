@@ -27,29 +27,29 @@ class LineProjector:
         # array of positions
         self.lineSegments = []
 
-        self.totalVorticity = 0.0
+        self.totalProjection = 0.0
 
         # to find the cells of self.grid that are intersected by the line
         self.cellLoc = vtk.vtkCellLocator()
         self.cellLoc.SetDataSet(self.grid)
         self.cellLoc.BuildLocator()
 
+
     def setLine(self, lamThes):
         """
         Set the closed line
         @param lamThes [(lam, the), ...]
         """
-        n = len(lamThes)
-        self.lineSegments = lamThes
+        self.lineSegments = numpy.array([(lt[0], lt[1], 0.0) for lt in lamThes])
 
 
-    def computeVorticity(self):
+    def project(self):
         """
-        Compute the vorticity
-        @return vorticity
+        Compute the projection
+        @return value
         """
 
-        self.totalVorticity = 0.0
+        self.totalProjection = 0.0
 
         # line parametric coordinates, will be filled in by 
         # the line-cell intersector
@@ -65,18 +65,18 @@ class LineProjector:
         intersector = CellLineIntersector()
 
         # number of segments
-        nSegs = len(self.lineSegments) - 1
+        nSegs = self.lineSegments.shape[0] - 1
 
-        # maps the polyline to the vorticity contribution
-        self.polyline2Integral = []
+        # contribution from each line segment
+        self.contributions = []
 
         # iterate over the segments of the line
     	for iSeg in range(nSegs):
 
-            # start point of segment
-            a = numpy.array(list(self.lineSegments[iSeg    ][:]) + [0.])
+            # starting point of segment
+            a = self.lineSegments[iSeg    , :]
             # end point of segement
-            b = numpy.array(list(self.lineSegments[iSeg + 1][:]) + [0.])
+            b = self.lineSegments[iSeg + 1, :]
 
             # get the lon/lat
             lamA, theA = a[:2]
@@ -86,8 +86,8 @@ class LineProjector:
             # (tBeg, tEnd): integral
             segment2Integral = {}
 
-            # iterate over the grid cells that are (likely) intersected by the line segment
-            # A -> B
+            # iterate over the grid cells that are (likely) intersected 
+            # by the line segment a -> b
             for cellId in self._findCells(a, b):
 
                 cell = self.grid.GetCell(cellId)
@@ -122,7 +122,7 @@ class LineProjector:
                         lam0, the0 = lt0[:2]
                         lam1, the1 = lt1[:2]
 
-                        # assumes counterclockwise orientation
+                        # assume counterclockwise orientation
                         lineIntegral= self.integralFunction(lam0, the0, lam1, the1)
 
                         # update the line integral
@@ -132,17 +132,17 @@ class LineProjector:
                     # cells when both tBeg and tEnd are the same
                     segment2Integral[tBeg.get(), tEnd.get()] = integral
 
-            self.polyline2Integral.append(segment2Integral)
+            self.contributions.append(segment2Integral)
 
-        self.totalVorticity = self._addContributions()
+        self.totalProjection = self._addContributions()
 
-        return self.totalVorticity
+        return self.totalProjection
 
 
     def _findCells(self, a, b):
         """
-        Find all the cells intersected by the line that goes through xyz0 and xyz1
-        @param a start point
+        Find all the cells intersected by the line that goes through two points
+        @param a starting point
         @param b end point
         @return list of cells
         """
@@ -162,7 +162,7 @@ class LineProjector:
         totalIntegral = 0.0
 
         iSeg = 0
-        for segment2Integral in self.polyline2Integral:
+        for segment2Integral in self.contributions:
             # the starting and ending parametric coordinates of the 
             # segment always start from 0 and should finish at 1.0
             totalT = 0.0
@@ -221,7 +221,7 @@ def testPole():
     lamB, theB =  math.pi, math.pi/5.
     vort.setLine([(lamA, theA), (lamB, theB)])
 
-    totVort = vort.computeVorticity()
+    totVort = vort.project()
     exact = psi(lamB, theB) - psi(lamA, theA)
     print('testPole: total integral = {} exact = {}'.format(totVort, exact))
 
