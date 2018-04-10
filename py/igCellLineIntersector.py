@@ -112,6 +112,66 @@ class CellLineIntersector:
         self.pts.InsertPoint(7, self._getXYZ(lam3, the3, 0.5))
 
 
+    def isPointInsideCell(self, pt, xi):
+        """
+        Check if point is inside cell
+        @param pt point
+        @param xi parametric coordinates
+        @return True is inside, false otherwise
+        """
+        subId = vtk.mutable(0)
+        dist = vtk.mutable(0.0)
+        return self.cell.EvaluatePosition(pt, self.closestPoint, subId, xi, dist, self.weights)
+
+
+    def findParametric(self, t, xi):
+        """
+        Find intersection of hex with line
+        @param t starting parametric line coordinate 0 <= tBeg <= 1 (output)
+        @param xi parametric coordinates (output)
+        @return True if an intersection was found
+        """
+        subId = vtk.mutable(0)
+        return self.cell.IntersectWithLine(self.pA, self.pB, self.tol, 
+                                           t, self.intersectPt, xi, subId)
+
+    def findParametricIntersection(self, tBeg, xiBeg, tEnd, xiEnd):
+        """
+        """
+        t = vtk.mutable(-1)
+        xi = numpy.zeros((3,), numpy.float64)
+
+        # compute the parametric coordinates xiBeg and xiEnd
+        if self.isPointInsideCell(self.pA, xi):
+            tBeg.set(0.0)
+            xiBeg[:] = xi[:2]
+            print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
+        else:
+            t.set(0.0)
+            found = self.findParametric(t, xi)
+            if found:
+                tBeg.set(t.get())
+                xiBeg[:] = xi[:2]
+                print '....... 1st intersection tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
+            else:
+                print 'No intersection and a is not inside cell!!!'
+
+        if self.isPointInsideCell(self.pB, xi):
+            tEnd.set(1.0)
+            xiEnd[:] = xi[:2]
+            print '....... b is inside cell tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
+        else:
+            # reset the starting point
+            t.set(tBeg.get() + self.tol)
+            found = self.findParametric(t, xi)
+            if found:
+                tEnd.set(t.get())
+                xiEnd[:] = xi[:2]
+                print '....... 2nd intersection tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
+            else:
+                print 'No intersection and b is not inside cell!!!'
+
+
     def findIntersection(self, tStart, tEnd, xiBeg, xiEnd):
         """
         Find intersection of hex with line
@@ -151,7 +211,7 @@ class CellLineIntersector:
             self.xi -= 1.0
             res1 = self.cell.IntersectWithLine(pA, pB, self.tol, tStart, self.intersectPt, self.xi, subId)
             if res1:
-                # it seems the parametric coords return by IntersectWithLine don't look right
+                # the parametric coords return by IntersectWithLine don't look right
                 self.cell.EvaluatePosition(self.intersectPt, self.closestPoint, subId, self.xi, dist, self.weights)
                 xiBeg[:] = self.xi[:2]
                 # move the starting point up for the next search
@@ -173,6 +233,7 @@ class CellLineIntersector:
 
         hasIntersection = (insideA == 1 or res1) and (insideB == 1 or res2)
         return hasIntersection
+
 
     def _getXYZ(self, lam, the, elev=0.0):
         """

@@ -102,15 +102,16 @@ class LineProjector:
                 lam3, the3 = lt3[:2]
 
                 intersector.setSphericalCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
-                print '... cell (lam, the): ', lam0, the0, lam1, the1, lam2, the2, lam3, the3
+                print '... cell Id (lam, the): ', cellId, lam0, the0, lam1, the1, lam2, the2, lam3, the3
 
-                # compute tBeg, tEnd, xiBeg and xiEnd
-                isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
-                if isIntersecting:
+                intersector.findParametricIntersection(tBeg, xiBeg, tEnd, xiEnd)
 
-                    # this prevents sub segments from assigning duplicate line integrals to different 
-                    # cells when both tBeg and tEnd are the same
+
+                print '>>> tBeg, tEnd = ', tBeg.get(), tEnd.get()
+                if tEnd.get() > tBeg.get() + self.EPS:
+                    print ',,, compute integral from t = {} -> {}: xi = {} -> {}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd)
                     segment2Integral[tBeg.get(), tEnd.get()] = self._computeIntegral(ptIds, xiBeg, xiEnd)
+
 
             self.contributions.append(segment2Integral)
 
