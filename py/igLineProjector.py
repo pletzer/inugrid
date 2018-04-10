@@ -77,11 +77,12 @@ class LineProjector:
             a = self.lineSegments[iSeg    , :]
             # end point of segement
             b = self.lineSegments[iSeg + 1, :]
+            print '<<< a, b = ', a, b
 
             # get the lon/lat
             lamA, theA = a[:2]
             lamB, theB = b[:2]
-            intersector.setLine(lamA, theA, lamB, theB)
+            intersector.setSphericalLine(lamA, theA, lamB, theB)
 
             # (tBeg, tEnd): integral
             segment2Integral = {}
@@ -101,42 +102,50 @@ class LineProjector:
                 lam3, the3 = lt3[:2]
 
                 intersector.setSphericalCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
+                print '... cell (lam, the): ', lam0, the0, lam1, the1, lam2, the2, lam3, the3
 
                 # compute tBeg, tEnd, xiBeg and xiEnd
                 isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
                 if isIntersecting:
 
-                    basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
-
-                    integral = 0.0
-
-                    # iterate over the edges
-                    numPts = 4
-                    for i0 in range(numPts):
-
-                        i1 = (i0 + 1) % numPts
-
-                        ptId0, ptId1 = ptIds.GetId(i0), ptIds.GetId(i1)
-                        lt0, lt1 = self.grid.GetPoint(ptId0), self.grid.GetPoint(ptId1)
-
-                        lam0, the0 = lt0[:2]
-                        lam1, the1 = lt1[:2]
-
-                        # assume counterclockwise orientation
-                        lineIntegral= self.integralFunction(lam0, the0, lam1, the1)
-
-                        # update the line integral
-                        integral += lineIntegral * basisIntegrator(i0)
-
                     # this prevents sub segments from assigning duplicate line integrals to different 
                     # cells when both tBeg and tEnd are the same
-                    segment2Integral[tBeg.get(), tEnd.get()] = integral
+                    segment2Integral[tBeg.get(), tEnd.get()] = self._computeIntegral(ptIds, xiBeg, xiEnd)
 
             self.contributions.append(segment2Integral)
 
         self.totalProjection = self._addContributions()
 
         return self.totalProjection
+
+
+    def _computeIntegral(self, ptIds, xiBeg, xiEnd):
+        """
+        Compute the integral contribution from line in cell
+        @param ptIds instnce of vtkIdList, set of point Ids
+        @param xiBeg starting position in parametric space
+        @param xiEnd end position in index parametric space
+        """
+
+        # create basis function integrator object
+        basisIntegrator = BasisFunctionIntegral(xiBeg, xiEnd)
+
+        integral = 0.0
+        numPts = 4
+        # iterate over the edges
+        for i0 in range(numPts):
+            i1 = (i0 + 1) % numPts
+
+            ptId0, ptId1 = ptIds.GetId(i0), ptIds.GetId(i1)
+            lt0, lt1 = self.grid.GetPoint(ptId0), self.grid.GetPoint(ptId1)
+
+            # assume counterclockwise orientation
+            lineIntegral= self.integralFunction(lt0[0], lt0[1], lt1[0], lt1[1])
+
+            # update the line integral for edge i0
+            integral += lineIntegral * basisIntegrator(i0)
+
+        return integral
 
 
     def _findCells(self, a, b):
@@ -163,7 +172,7 @@ class LineProjector:
 
         iSeg = 0
         for segment2Integral in self.contributions:
-            # the starting and ending parametric coordinates of the 
+            # the starting and end parametric coordinates of the 
             # segment always start from 0 and should finish at 1.0
             totalT = 0.0
             currentTEnd = -float('inf')
@@ -217,8 +226,8 @@ def testPole():
     # compute vorticity
     vort = LineProjector(grd, edgeIntegral)
 
-    lamA, theA =      0.0, math.pi/5.
-    lamB, theB =  math.pi, math.pi/5.
+    lamA, theA =       0.0, math.pi/5.
+    lamB, theB = 2*math.pi, math.pi/5.
     vort.setLine([(lamA, theA), (lamB, theB)])
 
     totVort = vort.project()

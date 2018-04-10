@@ -38,6 +38,17 @@ class CellLineIntersector:
         # tolerance for deciding if a line intersects with a cell
         self.tol = 1.e-14
 
+    def setSphericalLine(self, lamA, theA, lamB, theB):
+        """
+        Set the line
+        @param lamA longitude of starting point (in radiant)
+        @param theA latitude of starting point (in radiant)
+        @param lamB longitude of ending point
+        @param theB latitude of ending point
+        """
+        self.pA = numpy.array([lamA, theA, 0.0])
+        self.pB = numpy.array([lamB, theB, 0.0])
+
     def setLine(self, lamA, theA, lamB, theB):
         """
         Set the line
