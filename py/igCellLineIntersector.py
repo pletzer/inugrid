@@ -121,19 +121,29 @@ class CellLineIntersector:
         """
         subId = vtk.mutable(0)
         dist = vtk.mutable(0.0)
-        return self.cell.EvaluatePosition(pt, self.closestPoint, subId, xi, dist, self.weights)
+        res = self.cell.EvaluatePosition(pt, self.closestPoint, subId, xi, dist, self.weights)
+        print '******** xi = ', xi, ' pt = ', pt
+        return res
 
 
-    def findParametric(self, t, xi):
+    def findParametric(self, tStart, t, xi):
         """
         Find intersection of hex with line
-        @param t starting parametric line coordinate 0 <= tBeg <= 1 (output)
+        @paran tStart starting value for the ray
+        @param t starting parametric line coordinate 0 <= t <= 1 (output)
         @param xi parametric coordinates (output)
         @return True if an intersection was found
         """
         subId = vtk.mutable(0)
-        return self.cell.IntersectWithLine(self.pA, self.pB, self.tol, 
-                                           t, self.intersectPt, xi, subId)
+        tPrime = vtk.mutable(-1.)
+        pStart = self.pA + tStart*(self.pB - self.pA)
+        print '<<<<<<<    xi = ', xi
+        res = self.cell.IntersectWithLine(pStart, self.pB, self.tol, 
+                                           tPrime, self.intersectPt, xi, subId)
+        print '>>>>>>>    xi = ', xi
+        # modify the parametric coord to start from self.pA
+        t.set(tStart + tPrime.get()*(1.0 - tStart))
+        return res
 
     def findParametricIntersection(self, tBeg, xiBeg, tEnd, xiEnd):
         """
@@ -147,8 +157,7 @@ class CellLineIntersector:
             xiBeg[:] = xi[:2]
             print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
         else:
-            t.set(0.0)
-            found = self.findParametric(t, xi)
+            found = self.findParametric(0.0, t, xi)
             if found:
                 tBeg.set(t.get())
                 xiBeg[:] = xi[:2]
@@ -162,8 +171,8 @@ class CellLineIntersector:
             print '....... b is inside cell tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
         else:
             # reset the starting point
-            t.set(tBeg.get() + self.tol)
-            found = self.findParametric(t, xi)
+            tStart  = tBeg.get() + self.tol
+            found = self.findParametric(tStart, t, xi)
             if found:
                 tEnd.set(t.get())
                 xiEnd[:] = xi[:2]
