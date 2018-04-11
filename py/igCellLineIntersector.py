@@ -122,7 +122,6 @@ class CellLineIntersector:
         subId = vtk.mutable(0)
         dist = vtk.mutable(0.0)
         res = self.cell.EvaluatePosition(pt, self.closestPoint, subId, xi, dist, self.weights)
-        print '******** xi = ', xi, ' pt = ', pt
         return res
 
 
@@ -137,10 +136,8 @@ class CellLineIntersector:
         subId = vtk.mutable(0)
         tPrime = vtk.mutable(-1.)
         pStart = self.pA + tStart*(self.pB - self.pA)
-        print '<<<<<<<    xi = ', xi
         res = self.cell.IntersectWithLine(pStart, self.pB, self.tol, 
                                            tPrime, self.intersectPt, xi, subId)
-        print '>>>>>>>    xi = ', xi
         # modify the parametric coord to start from self.pA
         t.set(tStart + tPrime.get()*(1.0 - tStart))
         return res
@@ -155,20 +152,20 @@ class CellLineIntersector:
         if self.isPointInsideCell(self.pA, xi):
             tBeg.set(0.0)
             xiBeg[:] = xi[:2]
-            print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
+            #print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
         else:
             found = self.findParametric(0.0, t, xi)
             if found:
                 tBeg.set(t.get())
                 xiBeg[:] = xi[:2]
-                print '....... 1st intersection tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
+                #print '....... 1st intersection tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
             else:
                 print 'No intersection and a is not inside cell!!!'
 
         if self.isPointInsideCell(self.pB, xi):
             tEnd.set(1.0)
             xiEnd[:] = xi[:2]
-            print '....... b is inside cell tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
+            #print '....... b is inside cell tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
         else:
             # reset the starting point
             tStart  = tBeg.get() + self.tol
@@ -176,7 +173,7 @@ class CellLineIntersector:
             if found:
                 tEnd.set(t.get())
                 xiEnd[:] = xi[:2]
-                print '....... 2nd intersection tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
+                #print '....... 2nd intersection tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
             else:
                 print 'No intersection and b is not inside cell!!!'
 

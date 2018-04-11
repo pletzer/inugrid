@@ -77,7 +77,6 @@ class LineProjector:
             a = self.lineSegments[iSeg    , :]
             # end point of segement
             b = self.lineSegments[iSeg + 1, :]
-            print '<<< a, b = ', a, b
 
             # get the lon/lat
             lamA, theA = a[:2]
@@ -102,14 +101,11 @@ class LineProjector:
                 lam3, the3 = lt3[:2]
 
                 intersector.setSphericalCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
-                print '... cell Id (lam, the): ', cellId, lam0, the0, lam1, the1, lam2, the2, lam3, the3
 
                 intersector.findParametricIntersection(tBeg, xiBeg, tEnd, xiEnd)
 
 
-                print '>>> tBeg, tEnd = ', tBeg.get(), tEnd.get()
                 if tEnd.get() > tBeg.get() + self.EPS:
-                    print ',,, compute integral from t = {} -> {}: xi = {} -> {}'.format(tBeg.get(), tEnd.get(), xiBeg, xiEnd)
                     segment2Integral[tBeg.get(), tEnd.get()] = self._computeIntegral(ptIds, xiBeg, xiEnd)
 
 
