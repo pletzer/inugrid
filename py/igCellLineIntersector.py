@@ -49,7 +49,7 @@ class CellLineIntersector:
         self.pA = numpy.array([lamA, theA, 0.0])
         self.pB = numpy.array([lamB, theB, 0.0])
 
-    def setLine(self, lamA, theA, lamB, theB):
+    def setCartesianLine(self, lamA, theA, lamB, theB):
         """
         Set the line
         @param lamA longitude of starting point (in radiant)
@@ -86,7 +86,7 @@ class CellLineIntersector:
         self.pts.InsertPoint(7, (lam3, the3, 1.))
 
 
-    def setCell(self, lam0, the0, lam1, the1, lam2, the2, lam3, the3):
+    def setCartesianCell(self, lam0, the0, lam1, the1, lam2, the2, lam3, the3):
         """
         Set the cell vertices
         @param lam0 longitude vertex
@@ -272,12 +272,12 @@ def testEasy():
     lamB, theB = 0.005, 0.005
 
     cli = CellLineIntersector()
-    cli.setCell(lam0, the0,
-                lam1, the1, 
-                lam2, the2, 
-                lam3, the3)
-    cli.setLine(lamA, theA,
-                lamB, theB)
+    cli.setCartesianCell(lam0, the0,
+                         lam1, the1, 
+                         lam2, the2, 
+                         lam3, the3)
+    cli.setCartesianLine(lamA, theA,
+                         lamB, theB)
 
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
@@ -301,12 +301,12 @@ def test2Intersections():
     lamB, theB = 0.015, 0.005
 
     cli = CellLineIntersector()
-    cli.setCell(lam0, the0,
-                lam1, the1, 
-                lam2, the2, 
-                lam3, the3)
-    cli.setLine(lamA, theA,
-                lamB, theB)
+    cli.setCartesianCell(lam0, the0,
+                         lam1, the1, 
+                         lam2, the2, 
+                         lam3, the3)
+    cli.setCartesianLine(lamA, theA,
+                         lamB, theB)
 
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
@@ -330,12 +330,12 @@ def testInside():
     lamB, theB = 0.009, 0.005
 
     cli = CellLineIntersector()
-    cli.setCell(lam0, the0,
-                lam1, the1, 
-                lam2, the2, 
-                lam3, the3)
-    cli.setLine(lamA, theA,
-                lamB, theB)
+    cli.setCartesianCell(lam0, the0,
+                         lam1, the1, 
+                         lam2, the2, 
+                         lam3, the3)
+    cli.setCartesianLine(lamA, theA,
+                         lamB, theB)
 
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
@@ -359,12 +359,12 @@ def testOutside():
     lamB, theB = +0.03, -0.002
 
     cli = CellLineIntersector()
-    cli.setCell(lam0, the0,
-                lam1, the1, 
-                lam2, the2, 
-                lam3, the3)
-    cli.setLine(lamA, theA,
-                lamB, theB)
+    cli.setCartesianCell(lam0, the0,
+                         lam1, the1, 
+                         lam2, the2, 
+                         lam3, the3)
+    cli.setCartesianLine(lamA, theA,
+                         lamB, theB)
 
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
@@ -387,12 +387,12 @@ def testTangent():
     lamB, theB = +0.03, -0.0
 
     cli = CellLineIntersector()
-    cli.setCell(lam0, the0,
-                lam1, the1, 
-                lam2, the2, 
-                lam3, the3)
-    cli.setLine(lamA, theA,
-                lamB, theB)
+    cli.setCartesianCell(lam0, the0,
+                         lam1, the1, 
+                         lam2, the2, 
+                         lam3, the3)
+    cli.setCartesianLine(lamA, theA,
+                         lamB, theB)
 
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)
@@ -418,12 +418,12 @@ def testTangent2():
     lamB, theB = 0.07*piHalf, 0.05*piHalf
 
     cli = CellLineIntersector()
-    cli.setCell(lam0, the0,
-                lam1, the1, 
-                lam2, the2, 
-                lam3, the3)
-    cli.setLine(lamA, theA,
-                lamB, theB)
+    cli.setCartesianCell(lam0, the0,
+                         lam1, the1, 
+                         lam2, the2, 
+                         lam3, the3)
+    cli.setCartesianLine(lamA, theA,
+                         lamB, theB)
 
     xiBeg = numpy.zeros((2,), numpy.float64)
     xiEnd = numpy.zeros((2,), numpy.float64)

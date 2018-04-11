@@ -88,7 +88,7 @@ class FluxCalculator:
             # get the lon/lat
             lamA, theA = self._getLambdaThetaFromXYZ(xyzA)
             lamB, theB = self._getLambdaThetaFromXYZ(xyzB)
-            intersector.setLine(lamA, theA, lamB, theB)
+            intersector.setCartesianLine(lamA, theA, lamB, theB)
             #print '*** iSeg={} (lamA, theA)={} (lamB, theB)={}'.format(iSeg, (lamA, theA), (lamB, theB))
 
             # (tBeg, tEnd): flux
@@ -109,7 +109,7 @@ class FluxCalculator:
                 lam3, the3 = self._getLambdaThetaFromXYZ(xyz3)
                 #print '\t--- cellId={} verts 0={} 1={} 2={} 3={}'.format(cellId, (lam0, the0), (lam1, the1), (lam2, the2), (lam3, the3),)
 
-                intersector.setCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
+                intersector.setCartesianCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
                 # compute tBeg, tEnd, xiBeg and xiEnd
                 isIntersecting = intersector.findIntersection(tBeg, tEnd, xiBeg, xiEnd)
