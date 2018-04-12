@@ -41,6 +41,7 @@ class CellLineIntersector:
         # some members stored for efficiency
         self.subId = vtk.mutable(-1)
         self.dist = vtk.mutable(0.0)
+        self.t = vtk.mutable(0.0)
 
 
     def setSphericalLine(self, lamA, theA, lamB, theB):
@@ -137,18 +138,21 @@ class CellLineIntersector:
         @param xi parametric coordinates (output)
         @return True if an intersection was found
         """
-        tPrime = vtk.mutable(-1.)
         pStart = self.pA + tStart*(self.pB - self.pA)
         res = self.cell.IntersectWithLine(pStart, self.pB, self.tol, 
-                                           tPrime, self.intersectPt, xi, self.subId)
+                                           self.t, self.intersectPt, xi, self.subId)
         # modify the parametric coord to start from self.pA
-        t.set(tStart + tPrime.get()*(1.0 - tStart))
+        t.set(tStart + self.t.get()*(1.0 - tStart))
         return res
 
     def findParametricIntersection(self, tBeg, xiBeg, tEnd, xiEnd):
         """
+        Find the parametric coordinates of the intersection
+        @param tBeg linear parametric coord at the entrance of the ray (output)
+        @param xiBeg parametric coord of the cell at the entrance of the cell (output)
+        @param tEnd linear parametric coord at the exitof the ray (output)
+        @param xiEnd parametric coord of the cell at the exit of the cell (output)
         """
-        t = vtk.mutable(-1)
         xi = numpy.zeros((3,), numpy.float64)
 
         # compute the parametric coordinates xiBeg and xiEnd
@@ -157,9 +161,9 @@ class CellLineIntersector:
             xiBeg[:] = xi[:2]
             #print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
         else:
-            found = self.findParametric(0.0, t, xi)
+            found = self.findParametric(0.0, self.t, xi)
             if found:
-                tBeg.set(t.get())
+                tBeg.set(self.t.get())
                 xiBeg[:] = xi[:2]
                 #print '....... 1st intersection tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
             else:
@@ -172,9 +176,9 @@ class CellLineIntersector:
         else:
             # reset the starting point
             tStart  = tBeg.get() + self.tol
-            found = self.findParametric(tStart, t, xi)
+            found = self.findParametric(tStart, self.t, xi)
             if found:
-                tEnd.set(t.get())
+                tEnd.set(self.t.get())
                 xiEnd[:] = xi[:2]
                 #print '....... 2nd intersection tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
             else:
@@ -193,10 +197,6 @@ class CellLineIntersector:
 
         tStart.set(0.0)
         tEnd.set(1.0)
-
-        # parametric position
-        tprime = vtk.mutable(-1.0)
-
         hasIntersection = False
 
         res1 = 0
@@ -233,10 +233,10 @@ class CellLineIntersector:
             tEnd.set(1.0)
             xiEnd[:] = self.xi[:2]
         else:
-            res2 = self.cell.IntersectWithLine(pA, pB, self.tol, tprime, self.intersectPt, 
+            res2 = self.cell.IntersectWithLine(pA, pB, self.tol, self.t, self.intersectPt, 
                                                self.xi, self.subId)
             # correct the parametric coordinate to account for moving pA to the previous intersection
-            tEnd.set(tStart.get() + (1. - tStart.get())*tprime.get())
+            tEnd.set(tStart.get() + (1. - tStart.get())*self.t.get())
             if res2:
                 self.cell.EvaluatePosition(self.intersectPt, self.closestPoint, 
                                            self.subId, self.xi, self.dist, self.weights)
