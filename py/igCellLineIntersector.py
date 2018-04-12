@@ -40,6 +40,8 @@ class CellLineIntersector:
 
         # some members stored for efficiency
         self.subId = vtk.mutable(-1)
+        self.dist = vtk.mutable(0.0)
+
 
     def setSphericalLine(self, lamA, theA, lamB, theB):
         """
@@ -122,9 +124,8 @@ class CellLineIntersector:
         @param xi parametric coordinates
         @return True is inside, false otherwise
         """
-        dist = vtk.mutable(0.0)
         res = self.cell.EvaluatePosition(pt, self.closestPoint, self.subId, 
-                                        xi, dist, self.weights)
+                                        xi, self.dist, self.weights)
         return res
 
 
@@ -195,8 +196,6 @@ class CellLineIntersector:
 
         # parametric position
         tprime = vtk.mutable(-1.0)
-        # not used
-        dist = vtk.mutable(0.0)
 
         hasIntersection = False
 
@@ -207,7 +206,7 @@ class CellLineIntersector:
 
         # find if starting point is inside
         insideA = self.cell.EvaluatePosition(pA, self.closestPoint, 
-                                            self.subId, self.xi, dist, self.weights)
+                                            self.subId, self.xi, self.dist, self.weights)
         if insideA == 1:
             # self.pA is inside cell
             tStart.set(0.0)
@@ -221,14 +220,14 @@ class CellLineIntersector:
             if res1:
                 # the parametric coords return by IntersectWithLine don't look right
                 self.cell.EvaluatePosition(self.intersectPt, self.closestPoint, 
-                                           self.subId, self.xi, dist, self.weights)
+                                           self.subId, self.xi, self.dist, self.weights)
                 xiBeg[:] = self.xi[:2]
                 # move the starting point up for the next search
                 pA = self.intersectPt + 2*self.tol*(self.pB - self.pA)
 
         # find if ending position is inside
         insideB = self.cell.EvaluatePosition(pB, self.closestPoint, self.subId, 
-                                             self.xi, dist, self.weights)
+                                             self.xi, self.dist, self.weights)
         if insideB == 1:
             # self.pB is inside cell
             tEnd.set(1.0)
@@ -240,7 +239,7 @@ class CellLineIntersector:
             tEnd.set(tStart.get() + (1. - tStart.get())*tprime.get())
             if res2:
                 self.cell.EvaluatePosition(self.intersectPt, self.closestPoint, 
-                                           self.subId, self.xi, dist, self.weights)
+                                           self.subId, self.xi, self.dist, self.weights)
                 xiEnd[:] = self.xi[:2]
 
         hasIntersection = (insideA == 1 or res1) and (insideB == 1 or res2)
