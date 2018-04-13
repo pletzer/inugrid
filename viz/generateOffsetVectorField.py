@@ -105,9 +105,16 @@ grid.Allocate(numCells, 1)
 k = 0
 for i in range(nr):
 	for j in range(nt):
-		for el in range(4):
-			ptIds.SetId(el, k)
-			k += 1
+
+		k = nt1*i + j
+		ptIds.SetId(0, k)
+		k += nt1
+		ptIds.SetId(1, k)
+		k += 1
+		ptIds.SetId(2, k)
+		k -= nt1
+		ptIds.SetId(3, k)
+
 		grid.InsertNextCell(vtk.VTK_QUAD, ptIds)
 
 grid.SetPoints(points)
