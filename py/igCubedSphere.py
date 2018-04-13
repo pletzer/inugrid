@@ -4,7 +4,7 @@ import igAreas
 
 class CubedSphere:
 
-    def __init__(self, numCellsPerTile, radius=1.0):
+    def __init__(self, numCellsPerTile, radius=1.0, coords='cartesian'):
 
 
         self.appendGrids = vtk.vtkAppendFilter()
@@ -73,14 +73,19 @@ class CubedSphere:
                 ntot = numPointsPerTile**2
 
                 # create the VTK unstructured grid by combining the structured grids
-                tileXyz = vtk.vtkDoubleArray()
-                tileXyz.SetNumberOfComponents(3)
-                tileXyz.SetNumberOfTuples(ntot)
-                tileXyz.SetVoidArray(xyz, 3*ntot, 1)
+                tileVerts = vtk.vtkDoubleArray()
+                tileVerts.SetNumberOfComponents(3)
+                tileVerts.SetNumberOfTuples(ntot)
+
+                if coords == 'spherical':
+                    # convert to lat-lon in radians
+
+                else:
+                    tileVerts.SetVoidArray(xyz, 3*ntot, 1)
 
                 tilePts = vtk.vtkPoints()
                 tilePts.SetNumberOfPoints(ntot)
-                tilePts.SetData(tileXyz)
+                tilePts.SetData(tileVerts)
 
                 tileGrid = vtk.vtkStructuredGrid()
                 tileGrid.SetDimensions(numPointsPerTile, numPointsPerTile, 1)

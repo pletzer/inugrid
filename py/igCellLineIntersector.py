@@ -159,20 +159,20 @@ class CellLineIntersector:
         if self.isPointInsideCell(self.pA, xi):
             tBeg.set(0.0)
             xiBeg[:] = xi[:2]
-            #print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
+            print '....... a is inside cell tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
         else:
             found = self.findParametric(0.0, self.t, xi)
             if found:
                 tBeg.set(self.t.get())
                 xiBeg[:] = xi[:2]
-                #print '....... 1st intersection tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
+                print '....... 1st intersection tBeg = {} xiBeg = {}'.format(tBeg.get(), xiBeg)
             else:
                 print 'No intersection and a is not inside cell!!!'
 
         if self.isPointInsideCell(self.pB, xi):
             tEnd.set(1.0)
             xiEnd[:] = xi[:2]
-            #print '....... b is inside cell tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
+            print '....... b is inside cell tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
         else:
             # reset the starting point
             tStart  = tBeg.get() + self.tol
@@ -180,7 +180,7 @@ class CellLineIntersector:
             if found:
                 tEnd.set(self.t.get())
                 xiEnd[:] = xi[:2]
-                #print '....... 2nd intersection tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
+                print '....... 2nd intersection tEnd = {} xiEnd = {}'.format(tEnd.get(), xiEnd)
             else:
                 print 'No intersection and b is not inside cell!!!'
 

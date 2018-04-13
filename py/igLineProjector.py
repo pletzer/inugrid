@@ -100,6 +100,12 @@ class LineProjector:
                 lam2, the2 = lt2[:2]
                 lam3, the3 = lt3[:2]
 
+                # find the shortest path from lam0
+                twopi = 2. * numpy.pi
+                lam1 = self._modulo(lam0, lam1, twopi)
+                lam2 = self._modulo(lam0, lam2, twopi)
+                lam3 = self._modulo(lam0, lam3, twopi)
+
                 intersector.setSphericalCell(lam0, the0, lam1, the1, lam2, the2, lam3, the3)
 
                 intersector.findParametricIntersection(tBeg, xiBeg, tEnd, xiEnd)
@@ -114,6 +120,21 @@ class LineProjector:
         self.totalProjection = self._addContributions()
 
         return self.totalProjection
+
+
+    def _modulo(self, baselam, lam, periodicity):
+        """
+        Choose th emodulo operation that returns the shorted distance of 
+        lam form baselam
+        @param baselam base value
+        @param lam value
+        @param periodicity 
+        """
+        dlam = numpy.array([(lam - periodicity - baselam)**2, 
+                            (lam               - baselam)**2,
+                            (lam + periodicity - baselam)**2])
+        return lam + (dlam.argmin() - 1)*periodicity
+
 
 
     def _computeIntegral(self, ptIds, xiBeg, xiEnd):
@@ -218,6 +239,28 @@ def testPole():
     sphere = LatLon(numLats=nlat, numLons=nlon, radius=1.0, 
                   coords='spherical')
     sphere.save('testPole.vtk')
+    grd = sphere.getUnstructuredGrid()
+
+    # compute vorticity
+    vort = LineProjector(grd, edgeIntegral)
+
+    lamA, theA =       0.0, math.pi/5.
+    lamB, theB = 2*math.pi/4., math.pi/5.
+    vort.setLine([(lamA, theA), (lamB, theB)])
+
+    totVort = vort.project()
+    exact = psi(lamB, theB) - psi(lamA, theA)
+    print('testPole: total integral = {} exact = {}'.format(totVort, exact))
+
+    # check
+    assert abs(totVort - exact) < 1.e-10
+
+def testCubedSphere():
+
+    from igCubedSphere import CubedSphere
+
+    # create grid
+    sphere = CubedSphere(numCellsPerTile=10, radius=1.0, coords='spherical')
     grd = sphere.getUnstructuredGrid()
 
     # compute vorticity
