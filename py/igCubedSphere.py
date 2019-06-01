@@ -21,7 +21,7 @@ class CubedSphere:
 
         self.xyzList = []
         self.areaList = []
-        self.tileXyzList = []
+        self.tileVertList = []
         self.tilePtsList = []
         self.tileGridList = []
         self.tileAreaList = []
@@ -79,7 +79,7 @@ class CubedSphere:
 
                 if coords == 'spherical':
                     # convert to lat-lon in radians
-
+                    pass
                 else:
                     tileVerts.SetVoidArray(xyz, 3*ntot, 1)
 
@@ -96,7 +96,7 @@ class CubedSphere:
 
                 self.xyzList.append(xyz)
                 self.areaList.append(areas)
-                self.tileXyzList.append(tileXyz)
+                self.tileVertList.append(tileVerts)
                 self.tilePtsList.append(tilePts)
                 self.tileGridList.append(tileGrid)
                 self.tileAreaList.append(tileAreas)

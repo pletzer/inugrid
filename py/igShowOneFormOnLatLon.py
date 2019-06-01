@@ -1,4 +1,4 @@
-import igCubedSphere
+import igLatLon
 import vtk
 import numpy
 from igDivFilter import DivFilter
@@ -23,7 +23,8 @@ def psi(x, y):
 	@param x longitude 
 	@param y latitude
 	"""
-    return numpy.cos(y)*(numpy.cos(2*M*x) * numpy.sin(N*(3*y-x))**2)
+    return numpy.cos(y)*(numpy.sin(2*x - y))
+    #return numpy.cos(y)*(numpy.cos(2*M*x) * numpy.sin(N*(3*y-x))**2)
 
 
 def getIntegral(xa, xb, ya, yb):
@@ -42,9 +43,9 @@ def getLambdaTheta(point):
 
 
 # resolution of cubed-sphere 
-n = 20
+nLon, nLat = 80, 40
 
-cs = igCubedSphere.CubedSphere(n, radius=1.01)
+cs = igLatLon.LatLon(nLat, nLon, radius=1.01, coords='cartesian')
 grid = cs.getUnstructuredGrid()
 numCells = grid.GetNumberOfCells()
 points = grid.GetPoints()
@@ -123,7 +124,7 @@ lut.Build()
 # show
 tube = vtk.vtkTubeFilter()
 tube.SetInputData(poly)
-tube.SetRadius(0.02)
+tube.SetRadius(0.01)
 tube.SetNumberOfSides(5)
 tube.Update()
 tubeMapper = vtk.vtkPolyDataMapper()
@@ -174,12 +175,12 @@ for a in actors:
     ren.AddActor(a)
 
 camera = vtk.vtkCamera()
-camera.SetPosition(0., -4., 1.)
+camera.SetPosition(0., 4., 0.)
 camera.SetFocalPoint(0., 0., 0.)
-ren.SetActiveCamera(camera)
+#ren.SetActiveCamera(camera)
 
 ren.SetBackground(1., 1., 1.)
-renWin.SetSize(600, 600)
+renWin.SetSize(1200, 1200)
 iren.Initialize()
 renWin.Render()
 iren.Start()

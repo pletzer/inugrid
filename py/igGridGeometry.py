@@ -223,7 +223,7 @@ def testCellVertexIndexing():
     pts = geom.cell.GetPoints()
     numPts = pts.GetNumberOfPoints()
     for i in range(numPts):
-        print i, pts.GetPoint(i)
+        print('{} {}'.format(i, pts.GetPoint(i)))
 
 if __name__ == '__main__':
     #testCartesian()
